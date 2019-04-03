@@ -133,7 +133,53 @@ def save_spectrogram_vctk(test_split=0.1, start_sid=0):
 
     save_spectrogram(speakers, train_path, test_path, test_split, start_sid)
 
+def postprocess(dataset='voxceleb', nb_cal_files=100):
+    train_path = os.path.join(config.train_path, dataset)
+    test_path = os.path.join(config.test_path, dataset)
+
+    logistics = dict()
+    logistics['mean'] = np.zeros(shape=(config.mels,), dtype=np.float)
+    logistics['std'] = np.zeros(shape=(config.mels,), dtype=np.float)
+    logistics['mean_nb_utters'] = 0
+
+    print('calculating logistics')
+    count = 0
+    with tqdm(total=nb_cal_files) as pbar:
+        for file in os.listdir(train_path):
+            data = np.load(os.path.join(train_path, file))
+            data = np.reshape(np.transpose(data, axes=[1, 0, 2]), newshape=(40, -1))
+            count += 1
+            logistics['mean'] += np.squeeze(np.mean(data, axis=1))
+            logistics['std'] += np.squeeze(np.std(data, axis=1))
+            if count >= nb_cal_files: break
+            pbar.update(1)
+
+    logistics['mean'] /= count
+    logistics['std'] /= count
+
+    '''
+    repr preserves the commas in numpy array
+    '''
+    print('\nmean of mels')
+    print(repr(logistics['mean']))
+    print('\nstd of mels')
+    print(repr(logistics['std']))
+
+    logistics['std'] = np.expand_dims(np.expand_dims(logistics['std'], axis=0), axis=2)
+    logistics['mean'] = np.expand_dims(np.expand_dims(logistics['mean'], axis=0), axis=2)
+
+    print('processing train dataset')
+    count = 0
+    for file in tqdm(os.listdir(train_path)):
+        data = np.load(os.path.join(train_path, file))
+        count += 1
+        data -= logistics['mean']
+        data /= logistics['std']
+        print(data)
+
+
 if __name__ == '__main__':
     #save_spectrogram_vctk()
     #extract_noise()
-    save_spectrogram_voxceleb(start_sid=1088)
+    #save_spectrogram_voxceleb(start_sid=1088)
+    postprocess('vctk', nb_cal_files=100)
