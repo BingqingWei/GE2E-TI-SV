@@ -43,24 +43,33 @@ config_dict = {
     'M': 4,                                                 # number of utterances per speaker
     'lr': 0.01,
     'optim': ['sgd',                                        # type of the optimizer
-              {'beta1': 0.5, 'beta2': 0.9}],    # additional parameters
+              {'beta1': 0.5, 'beta2': 0.9}],                # additional parameters
     'nb_iters': 1e5,                                        # max iterations
     'save_per_iters': 3000,                                 # save models per X iterations
     'decay_per_iters': 10000,                               # decay learning rate per X iterations
     'log_per_iters': 100,                                   # log info per X iterations
     'summary_per_iters':50,                                 # write summary per X iterations
     'verbose': True,
-    'dataset': 'voxceleb',
+    'dataset': ['voxceleb', 'vctk'],                        # datasets to be used. if mode is set to infer,
+                                                            # then all datasets are ignored
+                                                            # in test mode, only one dataset is allowed
+    'weights': [0.5, 0.5],                                  # weights for each dataset
 
     # Debug
     'debug': True,                                          # turn on debug info output
 }
 
 assert config_dict['mode'] in ['train', 'test', 'infer']
-assert config_dict['dataset'] in ['voxceleb', 'vctk']
+assert len(config_dict['dataset']) != 0
+if config_dict['mode'] == 'test':
+    assert len(config_dict['dataset']) == 1
+
+for dataset in config_dict['dataset']:
+    assert dataset in ['voxceleb', 'vctk']
+assert len(config_dict['weights']) == len(config_dict['dataset'])
+
 config_dict['mid_frames'] = int((config_dict['max_frames'] + config_dict['min_frames']) / 2)
 
 
 config = Config()
 config.__dict__.update(config_dict)
-

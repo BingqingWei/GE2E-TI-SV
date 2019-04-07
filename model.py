@@ -9,10 +9,6 @@ from adv import *
 def embedd2center(embedd):
     return tf.reduce_mean(tf.reshape(embedd, shape=[config.N, config.M, -1]), axis=1)
 
-def gen_batch():
-    enroll_batch, verif_batch = random_batch2()
-    return np.concatenate([enroll_batch, verif_batch], axis=1)
-
 class Model:
     def __init__(self):
         if config.mode == 'infer':
@@ -28,31 +24,39 @@ class Model:
             verif_center = tf.reduce_mean(verif_embed, axis=0)
             self.s = tf.reduce_sum(enroll_center * verif_center, axis=0)
         else:
-            self.batch = tf.placeholder(shape=[None, config.N * config.M * 2, config.mels], dtype=tf.float32)
+            self.batch = tf.placeholder(shape=[None, config.N * config.M * 2 * len(config.dataset), config.mels], dtype=tf.float32)
             embedded = self.build_model(self.batch)
-            embedd_01 = embedded[config.N * config.M:, :]
-            embedd_02 = embedded[:config.N * config.M, :]
+            offset_base = config.N * config.M * 2
+            embedd_01 = [embedded[i * offset_base + config.N * config.M: (i + 1) * offset_base, :]
+                         for i in range(len(config.dataset))]
+            embedd_02 = [embedded[i * offset_base :i * offset_base + config.N * config.M, :]
+                         for i in range(len(config.dataset))]
 
             if config.mode == 'train':
                 w = tf.get_variable('w', initializer=np.array([10], dtype=np.float32))
                 b = tf.get_variable('b', initializer=np.array([-5], dtype=np.float32))
                 self.lr = tf.placeholder(dtype=tf.float32)
                 global_step = tf.Variable(0, name='global_step', trainable=False)
-                center_01 = embedd2center(embedd_01)
-                center_02 = embedd2center(embedd_02)
-                if config.verbose: print('embedded size: ', embedd_01.shape)
+                center_01 = [embedd2center(embedd) for embedd in embedd_01]
+                center_02 = [embedd2center(embedd) for embedd in embedd_02]
 
-                s_mat_01 = similarity(embedded=embedd_01, w=w, b=b, center=center_02)
-                s_mat_02 = similarity(embedded=embedd_02, w=w, b=b, center=center_01)
-                if config.verbose: print('similarity matrix size: ', s_mat_01.shape)
+                if config.verbose: print('embedded size: ', embedd_01[0].shape)
 
-                self.loss = loss_cal(s_mat_01, name=config.loss) + loss_cal(s_mat_02, name=config.loss)
+                s_mat_01 = [similarity(embedded=embedd, w=w, b=b, center=center)
+                            for embedd, center in zip(embedd_01, center_02)]
+                s_mat_02 = [similarity(embedded=embedd, w=w, b=b, center=center)
+                            for embedd, center in zip(embedd_02, center_01)]
+                if config.verbose: print('similarity matrix size: ', s_mat_01[0].shape)
+
+                self.loss = 0.0
+                for s_1, s_2, weight in zip(s_mat_01, s_mat_02, config.weights):
+                    self.loss += weight * (loss_cal(s_1, name=config.loss) + loss_cal(s_2, name=config.loss))
 
                 trainable_vars = tf.trainable_variables()
                 optimizer = optim(self.lr)
 
                 grads, params = zip(*optimizer.compute_gradients(self.loss))
-                grads_clip, _ = tf.clip_by_global_norm(grads, 3.0)
+                grads_clip, _ = tf.clip_by_global_norm(grads, 5.0)
                 if config.debug: tf.summary.scalar('gradient_norm', tf.global_norm(grads))
 
                 # 0.01 gradient scale for w and b, 0.5 gradient scale for projection nodes
@@ -93,6 +97,7 @@ class Model:
     def train(self, sess, path):
         assert config.mode == 'train'
         sess.run(tf.global_variables_initializer())
+        generator = BatchGenerator()
 
         model_path = os.path.join(path, 'check_point')
         log_path = os.path.join(path, 'logs')
@@ -104,7 +109,7 @@ class Model:
         loss_acc = 0
         for i in range(int(config.nb_iters)):
             _, loss_cur, summary = sess.run([self.train_op, self.loss, self.merged],
-                                            feed_dict={self.batch: gen_batch(),
+                                            feed_dict={self.batch: generator.gen_batch2(),
                                                        self.lr: config.lr * lr_factor})
             loss_acc += loss_cur
 
@@ -135,21 +140,19 @@ class Model:
             frr = sum([config.M - np.sum(s_thres[i][:, i]) for i in range(config.N)]) / config.M / config.N
             return far, frr
 
-
         self.saver.restore(sess, path)
 
         config.train = True
-        reset_buffer()
+        generator = BatchGenerator()
         s_mats = []
         for i in range(nb_batch_thres):
-            s = sess.run(self.s_mat, feed_dict={self.batch: gen_batch()})
+            s = sess.run(self.s_mat, feed_dict={self.batch: generator.gen_batch2()})
             s = s.reshape([config.N, config.M, -1])
             s_mats.append(s)
 
         diff = math.inf
         EER = 0
         THRES = 0
-
         for thres in [0.01 * i + 0.5 for i in range(50)]:
             fars = []
             frrs = []
@@ -167,10 +170,10 @@ class Model:
         print('(validation) thres: {}, EER: {}'.format(THRES, EER))
 
         config.train = False
-        reset_buffer()
+        generator.reset()
         EERS = []
         for i in range(nb_batch_test):
-            s = sess.run(self.s_mat, feed_dict={self.batch: gen_batch()})
+            s = sess.run(self.s_mat, feed_dict={self.batch: generator.gen_batch2()})
             s = s.reshape([config.N, config.M, -1])
 
             far, frr = cal_ff(s, THRES)
