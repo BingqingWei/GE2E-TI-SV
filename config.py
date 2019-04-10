@@ -58,6 +58,7 @@ config_dict = {
 
     # Debug
     'debug': True,                                          # turn on debug info output
+    'redirect_stdout': True,
 }
 
 assert config_dict['mode'] in ['train', 'test', 'infer']

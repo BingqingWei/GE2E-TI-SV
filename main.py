@@ -1,10 +1,15 @@
 import tensorflow as tf
 import os
 import shutil
+import sys
 from model import *
 from config import *
 
 if __name__ == "__main__":
+    if config.redirect_stdout:
+        sys.stdout = open(os.path.join('.', 'output.txt'), 'w')
+        print('stdout redirected')
+
     tf_config = tf.ConfigProto()
     tf_config.gpu_options.per_process_gpu_memory_fraction = config.gpu_fraction
     tf.reset_default_graph()

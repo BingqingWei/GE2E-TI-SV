@@ -116,6 +116,7 @@ class Model:
             if (i + 1) % config.log_per_iters == 0:
                 if config.verbose: print('(iter : %d) loss: %.4f' % ((i + 1), loss_acc / config.log_per_iters))
                 loss_acc = 0
+                if config.redirect_stdout: sys.stdout.flush()
 
             if (i + 1) % config.summary_per_iters == 0:
                 writer.add_summary(summary, i)
