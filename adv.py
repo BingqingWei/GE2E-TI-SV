@@ -99,8 +99,7 @@ class BatchGenerator:
         return buffer.sample2(frames=frames)
 
 class Buffer:
-    def __init__(self, K_N=(7 * config.N), K_M=(4 * config.M),
-                 flush_thres=config.flush_thres, dataset='voxceleb'):
+    def __init__(self, flush_thres=config.flush_thres, dataset='voxceleb'):
         """
         :param K_N:
         :param K_M:
@@ -110,10 +109,10 @@ class Buffer:
         self.dataset = dataset
 
         self.flush_thres = flush_thres
-        self.count_down = int(math.sqrt(K_N * K_M * flush_thres))
+        self.count_down = int(math.sqrt(config.K_N * config.K_M * flush_thres))
         self.counter = 0
-        self.K_N = K_N
-        self.K_M = K_M
+        self.K_N = config.K_N * config.N
+        self.K_M = config.K_M * config.M
         if config.mode == 'train':
             self.data_path = os.path.join(config.train_path, dataset)
         else:
@@ -204,8 +203,6 @@ class Buffer:
 
         return normalize_batch(batch, self.dataset), sel_speakers
 
-
-
 def gen_infer_batches():
     """
     :return: enrolls, verifs
@@ -225,9 +222,4 @@ def gen_infer_batches():
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     buffer = Buffer(dataset='voxceleb')
-    batch = random_batch(buffer=buffer, frames=160)[0]
-    print(batch.shape)
-    print(batch)
-    plt.imshow(np.squeeze(batch[:, 0, :]))
-    plt.show()
 

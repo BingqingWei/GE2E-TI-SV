@@ -36,11 +36,13 @@ config_dict = {
     'nb_layers': 3,                                         # number of LSTM_Projection layers
     'loss':'softmax',
     'flush_thres': 4,                                       # flushing threshold of the buffer
-    'gpu_fraction': 0.8,
+    'K_N': 20,                                              # K_N * N spearkers will be stored in buffer
+    'K_M': 4,                                               # each speaker in buffer will have 4 wave files
+    'gpu_fraction': 0.8,                                    # gpu fraction
 
     # Session
     'mode': 'train',                                        # train or test
-    'N': 16,                                                 # number of speakers per batch
+    'N': 16,                                                # number of speakers per batch
     'M': 7,                                                 # number of utterances per speaker
     'lr': 0.01,
     'optim': ['sgd',                                        # type of the optimizer
@@ -51,10 +53,10 @@ config_dict = {
     'log_per_iters': 100,                                   # log info per X iterations
     'summary_per_iters':50,                                 # write summary per X iterations
     'verbose': True,
-    'dataset': ['voxceleb'],                        # datasets to be used. if mode is set to infer,
+    'dataset': ['voxceleb'],                                # datasets to be used. if mode is set to infer,
                                                             # then all datasets are ignored
                                                             # in test mode, only one dataset is allowed
-    'weights': [1.0],                                  # weights for each dataset
+    'weights': [1.0],                                       # weights for each dataset
 
     # Debug
     'debug': True,                                          # turn on debug info output
