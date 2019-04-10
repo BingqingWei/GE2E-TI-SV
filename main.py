@@ -5,8 +5,10 @@ from model import *
 from config import *
 
 if __name__ == "__main__":
+    tf_config = tf.ConfigProto()
+    tf_config.gpu_options.per_process_gpu_memory_fraction = config.gpu_fraction
     tf.reset_default_graph()
-    sess = tf.Session()
+    sess = tf.Session(config=tf_config)
     model = Model()
     if config.mode == 'train':
         print("\nTraining Session")
@@ -14,6 +16,7 @@ if __name__ == "__main__":
             shutil.rmtree(config.model_path)
         os.makedirs(config.model_path)
         model.train(sess, config.model_path)
+
     elif config.mode == 'test':
         print("\nTest Session")
         if os.path.isdir(config.model_path):

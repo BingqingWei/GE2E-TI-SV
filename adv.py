@@ -99,7 +99,8 @@ class BatchGenerator:
         return buffer.sample2(frames=frames)
 
 class Buffer:
-    def __init__(self, K_N=(7 * config.N), K_M=(4 * config.M), flush_thres=1.5, dataset='voxceleb'):
+    def __init__(self, K_N=(7 * config.N), K_M=(4 * config.M),
+                 flush_thres=config.flush_thres, dataset='voxceleb'):
         """
         :param K_N:
         :param K_M:

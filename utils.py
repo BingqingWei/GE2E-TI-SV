@@ -23,8 +23,9 @@ def similarity(embedded, w, b, N=config.N, M=config.M, P=config.nb_proj, center=
     embedded_split = tf.reshape(embedded, shape=[N, M, P])
 
     if center is None:
-        center = tf.reduce_mean(embedded_split, axis=1)
-        center_except = tf.reshape(tf.reduce_sum(embedded_split, axis=1, keep_dims=True) - embedded_split, shape=[N * M, P]) / (M - 1)
+        center = normalize(tf.reduce_mean(embedded_split, axis=1))
+        center_except = normalize(tf.reshape(tf.reduce_sum(embedded_split, axis=1, keep_dims=True) - embedded_split,
+                                             shape=[N * M, P]) / (M - 1))
 
         S = tf.concat(
             [tf.concat([tf.reduce_sum(center_except[i * M:(i + 1) * M, :] * embedded_split[j, :, :], axis=1,
@@ -36,7 +37,8 @@ def similarity(embedded, w, b, N=config.N, M=config.M, P=config.nb_proj, center=
         # center[i, :] * embedded_slit[j, :, :] is element-wise multiplication
         # therefore it needs to use reduce_sum to get vectors dot product
         S = tf.concat([
-            tf.concat([tf.reduce_sum(center[i, :] * embedded_split[j, :, :], axis=1, keep_dims=True)
+            tf.concat([tf.reduce_sum(center[i, :] * embedded_split[j, :, :], axis=1,
+                                     keep_dims=True)
                        for i in range(N)], axis=1) for j in range(N)], axis=0)
 
     # shape = (N * M, N)
@@ -58,7 +60,6 @@ def loss_cal(S, name='softmax', N=config.N, M=config.M):
         total = tf.reduce_sum(1 - tf.sigmoid(S_correct) + tf.reduce_max(S_sig, axis=1, keep_dims=True))
     else:
         raise AssertionError("loss type should be softmax or contrast !")
-
     return total
 
 

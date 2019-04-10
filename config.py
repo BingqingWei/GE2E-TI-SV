@@ -14,7 +14,6 @@ modifying anything other than the config.mode is not recommended
 config_dict = {
     # Data
     'noise_path': os.path.join(work_dir, 'noise'),          # noise dataset directory
-
     'train_path': os.path.join(work_dir, 'train_tisv'),     # train dataset directory
     'test_path': os.path.join(work_dir, 'test_tisv'),       # test dataset directory
     'model_path': os.path.join(work_dir, 'tisv_model'),     # save paths
@@ -36,11 +35,13 @@ config_dict = {
     'nb_proj': 128,                                         # number of projection units
     'nb_layers': 3,                                         # number of LSTM_Projection layers
     'loss':'softmax',
+    'flush_thres': 4,                                       # flushing threshold of the buffer
+    'gpu_fraction': 0.8,
 
     # Session
     'mode': 'train',                                        # train or test
-    'N': 5,                                                 # number of speakers per batch
-    'M': 4,                                                 # number of utterances per speaker
+    'N': 16,                                                 # number of speakers per batch
+    'M': 7,                                                 # number of utterances per speaker
     'lr': 0.01,
     'optim': ['sgd',                                        # type of the optimizer
               {'beta1': 0.5, 'beta2': 0.9}],                # additional parameters
@@ -50,10 +51,10 @@ config_dict = {
     'log_per_iters': 100,                                   # log info per X iterations
     'summary_per_iters':50,                                 # write summary per X iterations
     'verbose': True,
-    'dataset': ['voxceleb', 'vctk'],                        # datasets to be used. if mode is set to infer,
+    'dataset': ['voxceleb'],                        # datasets to be used. if mode is set to infer,
                                                             # then all datasets are ignored
                                                             # in test mode, only one dataset is allowed
-    'weights': [0.5, 0.5],                                  # weights for each dataset
+    'weights': [1.0],                                  # weights for each dataset
 
     # Debug
     'debug': True,                                          # turn on debug info output

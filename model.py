@@ -7,7 +7,7 @@ from config import *
 from adv import *
 
 def embedd2center(embedd):
-    return tf.reduce_mean(tf.reshape(embedd, shape=[config.N, config.M, -1]), axis=1)
+    return normalize(tf.reduce_mean(tf.reshape(embedd, shape=[config.N, config.M, -1]), axis=1))
 
 class Model:
     def __init__(self):
@@ -20,8 +20,8 @@ class Model:
             enroll_embed = normalize(embedded[:enroll_size, :])
             verif_embed = normalize(embedded[enroll_size:, :])
 
-            enroll_center = tf.reduce_mean(enroll_embed, axis=0)
-            verif_center = tf.reduce_mean(verif_embed, axis=0)
+            enroll_center = normalize(tf.reduce_mean(enroll_embed, axis=0))
+            verif_center = normalize(tf.reduce_mean(verif_embed, axis=0))
             self.s = tf.reduce_sum(enroll_center * verif_center, axis=0)
         else:
             self.batch = tf.placeholder(shape=[None, config.N * config.M * 2 * len(config.dataset), config.mels], dtype=tf.float32)
