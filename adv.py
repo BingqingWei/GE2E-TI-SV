@@ -109,7 +109,7 @@ class Buffer:
         self.dataset = dataset
 
         self.flush_thres = flush_thres
-        self.count_down = int(math.sqrt(config.K_N * config.K_M * flush_thres))
+        self.count_down = int(config.K_N * config.K_M * flush_thres)
         self.counter = 0
         self.K_N = config.K_N * config.N
         self.K_M = config.K_M * config.M

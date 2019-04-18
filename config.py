@@ -44,9 +44,9 @@ config_dict = {
     'mode': 'train',                                        # train or test
     'N': 16,                                                # number of speakers per batch
     'M': 7,                                                 # number of utterances per speaker
-    'lr': 0.01,
-    'optim': ['sgd',                                        # type of the optimizer
-              {'beta1': 0.5, 'beta2': 0.9}],                # additional parameters
+    'lr': 0.001,
+    'optim': ['adam',                                       # type of the optimizer
+              {'beta1': 0.9, 'beta2': 0.999}],              # additional parameters
     'nb_iters': 1e5,                                        # max iterations
     'save_per_iters': 3000,                                 # save models per X iterations
     'decay_per_iters': 10000,                               # decay learning rate per X iterations

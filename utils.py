@@ -62,7 +62,6 @@ def loss_cal(S, name='softmax', N=config.N, M=config.M):
         raise AssertionError("loss type should be softmax or contrast !")
     return total
 
-
 def optim(lr):
     assert config.optim[0] in ['sgd', 'rmsprop', 'adam']
     if config.optim[0] == 'sgd':
@@ -71,4 +70,3 @@ def optim(lr):
         return tf.train.RMSPropOptimizer(lr, **config.optim[1])
     else:
         return tf.train.AdamOptimizer(lr, **config.optim[1])
-
