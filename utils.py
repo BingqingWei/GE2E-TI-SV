@@ -70,3 +70,11 @@ def optim(lr):
         return tf.train.RMSPropOptimizer(lr, **config.optim[1])
     else:
         return tf.train.AdamOptimizer(lr, **config.optim[1])
+
+def applyDecay(start_ler, global_step):
+    assert config.decay in ['cosine', 'exp']
+    if config.decay == 'cosin':
+        return tf.train.cosine_decay(start_ler, global_step, config.decay_per_iters)
+    else:
+        return tf.train.exponential_decay(start_ler, global_step, config.decay_per_iters,
+                                          decay_rate=0.5, staircase=True)

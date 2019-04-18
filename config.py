@@ -35,21 +35,22 @@ config_dict = {
     'nb_proj': 128,                                         # number of projection units
     'nb_layers': 3,                                         # number of LSTM_Projection layers
     'loss':'softmax',
-    'flush_thres': 4,                                       # flushing threshold of the buffer
+    'flush_thres': 200,                                     # flushing threshold of the buffer
     'K_N': 20,                                              # K_N * N spearkers will be stored in buffer
     'K_M': 4,                                               # each speaker in buffer will have 4 wave files
     'gpu_fraction': 0.8,                                    # gpu fraction
 
     # Session
     'mode': 'train',                                        # train or test
-    'N': 16,                                                # number of speakers per batch
-    'M': 7,                                                 # number of utterances per speaker
-    'lr': 0.001,
-    'optim': ['adam',                                       # type of the optimizer
+    'N': 5,                                                 # number of speakers per batch
+    'M': 4,                                                 # number of utterances per speaker
+    'lr': 0.01,
+    'optim': ['sgd',                                        # type of the optimizer
               {'beta1': 0.9, 'beta2': 0.999}],              # additional parameters
+    'decay': 'cosine',
     'nb_iters': 1e5,                                        # max iterations
     'save_per_iters': 3000,                                 # save models per X iterations
-    'decay_per_iters': 10000,                               # decay learning rate per X iterations
+    'decay_per_iters': 6000,                               # decay learning rate per X iterations
     'log_per_iters': 100,                                   # log info per X iterations
     'summary_per_iters':50,                                 # write summary per X iterations
     'verbose': True,
@@ -60,7 +61,7 @@ config_dict = {
 
     # Debug
     'debug': True,                                          # turn on debug info output
-    'redirect_stdout': True,
+    'redirect_stdout': False,
 }
 
 assert config_dict['mode'] in ['train', 'test', 'infer']

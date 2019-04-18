@@ -36,8 +36,6 @@ class Model:
             if config.mode == 'train':
                 w = tf.get_variable('w', initializer=np.array([10], dtype=np.float32))
                 b = tf.get_variable('b', initializer=np.array([-5], dtype=np.float32))
-                self.lr = tf.placeholder(dtype=tf.float32)
-                global_step = tf.Variable(0, name='global_step', trainable=False)
                 center_01 = [embedd2center(embedd) for embedd in embedd_01]
                 center_02 = [embedd2center(embedd) for embedd in embedd_02]
 
@@ -54,21 +52,23 @@ class Model:
                     self.loss += weight * (loss_cal(s_1, name=config.loss) + loss_cal(s_2, name=config.loss))
 
                 trainable_vars = tf.trainable_variables()
+                self.global_step = tf.Variable(0, name='global_step', trainable=False)
+                self.lr = applyDecay(config.lr, self.global_step)
                 optimizer = optim(self.lr)
 
                 grads, params = zip(*optimizer.compute_gradients(self.loss))
-                grads_clip, _ = tf.clip_by_global_norm(grads, 5.0)
-                if config.debug: tf.summary.scalar('gradient_norm', tf.global_norm(grads))
 
                 # 0.01 gradient scale for w and b, 0.5 gradient scale for projection nodes
-                grads_rescale = [0.01 * g for g in grads_clip[:2]]
-                for g, p in zip(grads_clip[2:], params[2:]):
+                grads_rescale = [0.01 * g for g in grads[:2]]
+                for g, p in zip(grads[2:], params[2:]):
                     if 'projection' in p.name:
                         grads_rescale.append(0.5 * g)
                     else:
                         grads_rescale.append(g)
 
-                self.train_op = optimizer.apply_gradients(zip(grads_rescale, params), global_step=global_step)
+                if config.debug: tf.summary.scalar('gradient_norm', tf.global_norm(grads_rescale))
+                grads_rescale, _ = tf.clip_by_global_norm(grads_rescale, 3.0)
+                self.train_op = optimizer.apply_gradients(zip(grads_rescale, params), global_step=self.global_step)
                 variable_count = np.sum(np.array([np.prod(np.array(v.get_shape().as_list())) for v in trainable_vars]))
                 if config.verbose: print('total variables:', variable_count)
                 tf.summary.scalar('loss', self.loss)
@@ -80,20 +80,22 @@ class Model:
                 verif_embed = embedd_02
                 self.s_mat = similarity(embedded=verif_embed, w=1.0, b=0.0, center=enroll_embed)
             else: raise ValueError()
-
         self.saver = tf.train.Saver()
 
     def build_model(self, batch):
         with tf.variable_scope('lstm'):
-            cells = [tf.nn.rnn_cell.LSTMCell(num_units=config.nb_hidden, num_proj=config.nb_proj,
+            cells = [tf.nn.rnn_cell.LSTMCell(num_units=config.nb_hidden,
+                                             num_proj=config.nb_proj,
                                              initializer=tf.initializers.glorot_normal)
-                     for i in range(config.nb_layers)]
+                     for _ in range(config.nb_layers)]
             lstm = tf.nn.rnn_cell.MultiRNNCell(cells)
             outputs, _ = tf.nn.dynamic_rnn(cell=lstm, inputs=batch, dtype=tf.float32, time_major=True)
             embedded = outputs[-1]
+
             # shape = (N * M, nb_proj)
             embedded = normalize(embedded)
         return embedded
+
 
     def train(self, sess, path):
         assert config.mode == 'train'
@@ -106,12 +108,10 @@ class Model:
         os.makedirs(log_path, exist_ok=True)
 
         writer = tf.summary.FileWriter(log_path, sess.graph)
-        lr_factor = 1
         loss_acc = 0
         for i in range(int(config.nb_iters)):
             _, loss_cur, summary = sess.run([self.train_op, self.loss, self.merged],
-                                            feed_dict={self.batch: generator.gen_batch2(),
-                                                       self.lr: config.lr * lr_factor})
+                                            feed_dict={self.batch: generator.gen_batch2()})
             loss_acc += loss_cur
 
             if (i + 1) % config.log_per_iters == 0:
@@ -123,20 +123,16 @@ class Model:
                 writer.add_summary(summary, i)
                 writer.flush()
 
-            if (i + 1) % config.decay_per_iters == 0:
-                lr_factor /= 2
-                if config.verbose: print('learning rate is decayed, current lr: ', config.lr * lr_factor)
-
             if (i + 1) % config.save_per_iters == 0:
                 self.saver.save(sess, os.path.join(path, 'check_point', 'model.ckpt'),
                                 global_step=i // config.save_per_iters)
                 if config.verbose: print('model is saved')
 
+
     def test(self, sess, path, nb_batch_thres=5, nb_batch_test=40):
         assert config.mode == 'test'
         def cal_ff(s, thres):
             s_thres = s > thres
-
             far = sum([np.sum(s_thres[i]) - np.sum(s_thres[i, :, i]) for i in range(config.N)]) / \
                   (config.N - 1) / config.M / config.N
             frr = sum([config.M - np.sum(s_thres[i][:, i]) for i in range(config.N)]) / config.M / config.N
