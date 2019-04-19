@@ -11,7 +11,8 @@ class LSTM_Model(Model):
                                              initializer=tf.initializers.glorot_normal)
                      for _ in range(config.nb_layers)]
             lstm = tf.keras.layers.StackedRNNCells(cells)
-            embedded = tf.keras.layers.RNN(cell=lstm, return_sequences=False, return_state=False)(batch)
+            embedded = tf.keras.layers.RNN(cell=lstm, return_sequences=False,
+                                           return_state=False, time_major=True)(batch)
 
             # shape = (N * M, nb_proj)
             embedded = normalize(embedded)

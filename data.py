@@ -14,34 +14,6 @@ avg_frames = int((config.max_frames + config.min_frames) / 2.0)
 hop_frames = int(avg_frames / 2)
 utter_min_len = (config.max_frames * config.hop + config.window) * config.sr
 
-def extract_noise():
-    print('starting noise extraction')
-    os.makedirs(config.noise_path, exist_ok=True)
-    batch_frames = config.N * config.M * config.frames
-
-    stacked_noise = []
-    stacked_len = 0
-    k = 0
-    for i, path in enumerate(tqdm(os.listdir(clean_path))):
-
-        clean, sr = librosa.core.load(os.path.join(clean_path, path), sr=8000)
-        noisy, _ = librosa.core.load(os.path.join(noisy_path, path), sr=sr)
-        noise = clean - noisy
-        S = librosa.core.stft(y=noise, n_fft=config.nfft, win_length=int(config.window * sr),
-                              hop_length=int(config.hop * sr))
-
-        stacked_noise.append(S)
-        stacked_len += S.shape[1]
-        if stacked_len < batch_frames: continue
-
-        stacked_noise = np.concatenate(stacked_noise, axis=1)[:, :batch_frames]
-        np.save(os.path.join(config.noise_path, 'noise_{}.npy'.format(k)), stacked_noise)
-        stacked_noise = []
-        stacked_len = 0
-        k += 1
-
-    print('noise extraction ended, total {} files'.format(k))
-
 def wav2spectro(utter_path):
     utterances_spec = []
     utter, sr = librosa.core.load(utter_path, config.sr)
@@ -133,9 +105,8 @@ def save_spectrogram_vctk(test_split=0.1, start_sid=0):
 
     save_spectrogram(speakers, train_path, test_path, test_split, start_sid)
 
-def postprocess(dataset='voxceleb', nb_cal_files=100):
+def postprocess(dataset='voxceleb', nb_cal_files=None):
     train_path = os.path.join(config.train_path, dataset)
-    test_path = os.path.join(config.test_path, dataset)
 
     logistics = dict()
     logistics['mean'] = np.zeros(shape=(config.mels,), dtype=np.float)
@@ -144,8 +115,12 @@ def postprocess(dataset='voxceleb', nb_cal_files=100):
 
     print('calculating logistics')
     count = 0
-    with tqdm(total=nb_cal_files) as pbar:
-        for file in os.listdir(train_path):
+
+    files = os.listdir(train_path)
+    if nb_cal_files is None:
+        nb_cal_files = len(files)
+    with tqdm(total=min(len(files), nb_cal_files)) as pbar:
+        for file in files:
             data = np.load(os.path.join(train_path, file))
             data = np.reshape(np.transpose(data, axes=[1, 0, 2]), newshape=(40, -1))
             count += 1
@@ -205,7 +180,6 @@ def statistics_voxceleb():
 
 if __name__ == '__main__':
     #save_spectrogram_vctk()
-    #extract_noise()
     #save_spectrogram_voxceleb(start_sid=1088)
     #postprocess('vctk', nb_cal_files=100)
     statistics_voxceleb()

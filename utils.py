@@ -20,13 +20,13 @@ def cossim(x, y, normalized=True):
         return tf.reduce_sum(x * y) / x_norm / y_norm
 
 
-def similarity(embedded, w, b, N=config.N, M=config.M, P=config.nb_proj, center=None):
-    embedded_split = tf.reshape(embedded, shape=[N, M, P])
+def similarity(embedded, w, b, N=config.N, M=config.M, center=None):
+    embedded_split = tf.reshape(embedded, shape=[N, M, -1])
 
     if center is None:
         center = normalize(tf.reduce_mean(embedded_split, axis=1))
         center_except = normalize(tf.reshape(tf.reduce_sum(embedded_split, axis=1, keepdims=True) - embedded_split,
-                                             shape=[N * M, P]) / (M - 1))
+                                             shape=[N * M, -1]) / (M - 1))
 
         S = tf.concat(
             [tf.concat([tf.reduce_sum(center_except[i * M:(i + 1) * M, :] * embedded_split[j, :, :], axis=1,

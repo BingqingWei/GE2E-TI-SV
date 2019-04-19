@@ -13,7 +13,6 @@ modifying anything other than the config.mode is not recommended
 
 config_dict = {
     # Data
-    'noise_path': os.path.join(work_dir, 'noise'),          # noise dataset directory
     'train_path': os.path.join(work_dir, 'train_tisv'),     # train dataset directory
     'test_path': os.path.join(work_dir, 'test_tisv'),       # test dataset directory
     'model_path': os.path.join(work_dir, 'tisv_model'),     # save paths
@@ -35,8 +34,7 @@ config_dict = {
     'nb_proj': 128,                                         # number of projection units
     'nb_layers': 3,                                         # number of LSTM_Projection layers
     'loss':'softmax',
-    'flush_thres': 200,                                     # flushing threshold of the buffer
-    'K_N': 20,                                              # K_N * N spearkers will be stored in buffer
+    'K_N': 10,                                              # K_N * N spearkers will be stored in buffer
     'gpu_fraction': 0.8,                                    # gpu fraction
 
     # Session
@@ -52,6 +50,7 @@ config_dict = {
     'decay_per_iters': 6000,                               # decay learning rate per X iterations
     'log_per_iters': 100,                                   # log info per X iterations
     'summary_per_iters':50,                                 # write summary per X iterations
+    'valid_per_iters': 300,
     'verbose': True,
     'dataset': ['voxceleb'],                                # datasets to be used. if mode is set to infer,
                                                             # then all datasets are ignored
@@ -68,7 +67,6 @@ each speaker in buffer will have K_M * M wave files
 it's recommended to set
 K_M = average(number of wav files per speaker) / M
 '''
-
 config_dict['K_M'] = int(45 / config_dict['M'])
 
 assert config_dict['mode'] in ['train', 'test', 'infer']

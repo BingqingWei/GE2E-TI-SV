@@ -1,7 +1,16 @@
 import shutil
+import glob
 from models.base import *
 from models.rnn import *
+from models.cnn import *
 from config import *
+
+def get_latest_ckpt(fpath):
+    files = glob.glob(os.path.join(fpath, 'model.ckpt-*.meta'))
+    files = [x[:-5] for x in files]
+    files.sort()
+    if len(files) == 0: return None
+    return files[-1]
 
 if __name__ == "__main__":
     if config.redirect_stdout:

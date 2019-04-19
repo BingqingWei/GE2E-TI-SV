@@ -83,6 +83,10 @@ class Model:
         self.saver = tf.train.Saver()
 
     def build_model(self, batch):
+        """
+        :param batch: (time_steps, batch_size, mels)
+        :return:
+        """
         raise NotImplementedError()
 
 
@@ -90,6 +94,7 @@ class Model:
         assert config.mode == 'train'
         sess.run(tf.global_variables_initializer())
         generator = BatchGenerator()
+        valid_generator = ValidBatchGenerator(nb_batches=5 * 2)
 
         model_path = os.path.join(path, 'check_point')
         log_path = os.path.join(path, 'logs')
@@ -116,6 +121,17 @@ class Model:
                 self.saver.save(sess, os.path.join(path, 'check_point', 'model.ckpt'),
                                 global_step=i // config.save_per_iters)
                 if config.verbose: print('model is saved')
+
+            if (i + 1) % config.valid_per_iters == 0:
+                self.valid(sess, valid_generator)
+
+    def valid(self, sess, generator):
+        loss_acc = 0
+        for i in range(generator.nb_batches):
+            _, loss_cur = sess.run([self.train_op, self.loss],
+                                   feed_dict={self.batch: generator.gen_batch2()})
+            loss_acc += loss_cur
+        print('validation loss: {}'.format(loss_acc / generator.nb_batches))
 
 
     def test(self, sess, path, nb_batch_thres=5, nb_batch_test=40):
