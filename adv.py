@@ -99,20 +99,14 @@ class BatchGenerator:
         return buffer.sample2(frames=frames)
 
 class Buffer:
-    def __init__(self, flush_thres=config.flush_thres, dataset='voxceleb'):
-        """
-        :param K_N:
-        :param K_M:
-        :param flush_thres: should be greater than 1
-        """
+    def __init__(self, dataset='voxceleb'):
         if config.mode != 'train': flush_thres = 0.4
         self.dataset = dataset
 
-        self.flush_thres = flush_thres
-        self.count_down = int(config.K_N * config.K_M * flush_thres)
         self.counter = 0
         self.K_N = config.K_N * config.N
         self.K_M = config.K_M * config.M
+        self.count_down = self.calcCountDown()
         if config.mode == 'train':
             self.data_path = os.path.join(config.train_path, dataset)
         else:
@@ -121,13 +115,16 @@ class Buffer:
         self.flush()
         if config.debug: print('buffer countdown: ', self.count_down)
 
+    def calcCountDown(self):
+        return config.K_N ** 2 * config.K_M
+
     def update(self, npy_list):
         """
         :param npy_list:
         :return: whether to flush the buffer
         """
         self.K_N = min(self.K_N, len(npy_list))
-        self.count_down = int(math.sqrt(self.K_N * self.K_M * self.flush_thres))
+        self.count_down = self.calcCountDown()
         self.counter = 0
         return self.K_N != len(npy_list) or self.buffer is None
 

@@ -37,7 +37,6 @@ config_dict = {
     'loss':'softmax',
     'flush_thres': 200,                                     # flushing threshold of the buffer
     'K_N': 20,                                              # K_N * N spearkers will be stored in buffer
-    'K_M': 4,                                               # each speaker in buffer will have 4 wave files
     'gpu_fraction': 0.8,                                    # gpu fraction
 
     # Session
@@ -63,6 +62,14 @@ config_dict = {
     'debug': True,                                          # turn on debug info output
     'redirect_stdout': False,
 }
+
+'''
+each speaker in buffer will have K_M * M wave files
+it's recommended to set
+K_M = average(number of wav files per speaker) / M
+'''
+
+config_dict['K_M'] = int(45 / config_dict['M'])
 
 assert config_dict['mode'] in ['train', 'test', 'infer']
 assert len(config_dict['dataset']) != 0

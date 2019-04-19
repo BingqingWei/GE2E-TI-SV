@@ -177,9 +177,35 @@ def postprocess(dataset='voxceleb', nb_cal_files=100):
         data /= logistics['std']
         print(data)
 
+def statistics_voxceleb():
+    """
+    processing voxceleb dataset
+    Total number of speakers: 1211
+    Max number of wav files per speaker: 1002
+    Min number of wav files per speaker: 45
+    Mean number of wav files per speaker: 122.74318744838976
+    """
+    print('processing voxceleb dataset')
+    audio_path = os.path.join(voxceleb_path, 'wav')
+
+    wav_files = []
+
+    for folder in os.listdir(audio_path):
+        speaker_path = os.path.join(audio_path, folder)
+        count = 0
+        for sub_folder in os.listdir(speaker_path):
+            sub_utter_path = os.path.join(speaker_path, sub_folder)
+            wavs = os.listdir(sub_utter_path)
+            count += len(wavs)
+        wav_files.append(count)
+    print('Total number of speakers: {}'.format(len(wav_files)))
+    print('Max number of wav files per speaker: {}'.format(max(wav_files)))
+    print('Min number of wav files per speaker: {}'.format(min(wav_files)))
+    print('Mean number of wav files per speaker: {}'.format(np.mean(wav_files)))
 
 if __name__ == '__main__':
     #save_spectrogram_vctk()
     #extract_noise()
     #save_spectrogram_voxceleb(start_sid=1088)
-    postprocess('vctk', nb_cal_files=100)
+    #postprocess('vctk', nb_cal_files=100)
+    statistics_voxceleb()

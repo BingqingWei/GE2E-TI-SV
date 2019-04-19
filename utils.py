@@ -8,7 +8,8 @@ import os
 from config import *
 
 def normalize(x):
-    return x / tf.sqrt(tf.reduce_sum(x ** 2, axis=-1, keep_dims=True) + 1e-6)
+    return x / tf.sqrt(tf.reduce_sum(x ** 2, axis=-1, keepdims=True) + 1e-6)
+
 
 def cossim(x, y, normalized=True):
     if normalized:
@@ -24,13 +25,13 @@ def similarity(embedded, w, b, N=config.N, M=config.M, P=config.nb_proj, center=
 
     if center is None:
         center = normalize(tf.reduce_mean(embedded_split, axis=1))
-        center_except = normalize(tf.reshape(tf.reduce_sum(embedded_split, axis=1, keep_dims=True) - embedded_split,
+        center_except = normalize(tf.reshape(tf.reduce_sum(embedded_split, axis=1, keepdims=True) - embedded_split,
                                              shape=[N * M, P]) / (M - 1))
 
         S = tf.concat(
             [tf.concat([tf.reduce_sum(center_except[i * M:(i + 1) * M, :] * embedded_split[j, :, :], axis=1,
-                                      keep_dims=True) if i == j
-                        else tf.reduce_sum(center[i:(i + 1), :] * embedded_split[j, :, :], axis=1, keep_dims=True) for i
+                                      keepdims=True) if i == j
+                        else tf.reduce_sum(center[i:(i + 1), :] * embedded_split[j, :, :], axis=1, keepdims=True) for i
                         in range(N)],
                        axis=1) for j in range(N)], axis=0)
     else:
@@ -38,7 +39,7 @@ def similarity(embedded, w, b, N=config.N, M=config.M, P=config.nb_proj, center=
         # therefore it needs to use reduce_sum to get vectors dot product
         S = tf.concat([
             tf.concat([tf.reduce_sum(center[i, :] * embedded_split[j, :, :], axis=1,
-                                     keep_dims=True)
+                                     keepdims=True)
                        for i in range(N)], axis=1) for j in range(N)], axis=0)
 
     # shape = (N * M, N)
@@ -50,16 +51,16 @@ def loss_cal(S, name='softmax', N=config.N, M=config.M):
     # S_{j i, j}
     S_correct = tf.concat([S[i * M:(i + 1) * M, i:(i + 1)] for i in range(N)], axis=0)  # colored entries in Fig.1
 
-    if name == "softmax":
-        total = -tf.reduce_sum(S_correct - tf.log(tf.reduce_sum(tf.exp(S), axis=1, keep_dims=True) + 1e-6))
-    elif name == "contrast":
+    if name == 'softmax':
+        total = -tf.reduce_sum(S_correct - tf.log(tf.reduce_sum(tf.exp(S), axis=1, keepdims=True) + 1e-6))
+    elif name == 'contrast':
         S_sig = tf.sigmoid(S)
         S_sig = tf.concat([tf.concat([0 * S_sig[i * M:(i + 1) * M, j:(j + 1)] if i == j
                                       else S_sig[i * M:(i + 1) * M, j:(j + 1)] for j in range(N)], axis=1)
                            for i in range(N)], axis=0)
-        total = tf.reduce_sum(1 - tf.sigmoid(S_correct) + tf.reduce_max(S_sig, axis=1, keep_dims=True))
+        total = tf.reduce_sum(1 - tf.sigmoid(S_correct) + tf.reduce_max(S_sig, axis=1, keepdims=True))
     else:
-        raise AssertionError("loss type should be softmax or contrast !")
+        raise AssertionError('loss type should be softmax or contrast!')
     return total
 
 def optim(lr):
