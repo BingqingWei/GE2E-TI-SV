@@ -21,7 +21,7 @@ config_dict = {
     # Preprocessing
     'nb_noises': 64,                                        # how many of the noise files to choose
     'max_ckpts': 6,                                         # max checkpoints to keep
-    'sr': 8000,                                             # sample rate
+    'sr': 16000,                                            # sample rate
     'nfft': 512,                                            # fft kernel size
     'window': 0.025,                                        # window length (ms)
     'hop': 0.01,                                            # hop size (ms)
@@ -79,7 +79,6 @@ for dataset in config_dict['dataset']:
 assert len(config_dict['weights']) == len(config_dict['dataset'])
 
 config_dict['mid_frames'] = int((config_dict['max_frames'] + config_dict['min_frames']) / 2)
-
 
 config = Config()
 config.__dict__.update(config_dict)

@@ -1,4 +1,5 @@
 from tqdm import tqdm
+from scipy.signal import lfilter
 
 from utils import *
 from config import *
@@ -14,10 +15,18 @@ avg_frames = int((config.max_frames + config.min_frames) / 2.0)
 hop_frames = int(avg_frames / 2)
 utter_min_len = (config.max_frames * config.hop + config.window) * config.sr
 
+def preemphasis(x):
+    """
+    Credits to keithito
+    Github code link: https://github.com/keithito/tacotron/blob/master/util/audio.py
+    """
+    return lfilter([1, -0.97], [1], x)
+
 def wav2spectro(utter_path):
     utterances_spec = []
     utter, sr = librosa.core.load(utter_path, config.sr)
-    intervals = librosa.effects.split(utter, top_db=20)
+    utter = preemphasis(utter)
+    intervals = librosa.effects.split(utter, top_db=25)
     for interval in intervals:
         if (interval[1] - interval[0]) > utter_min_len:
             utter_part = utter[interval[0]:interval[1]]
