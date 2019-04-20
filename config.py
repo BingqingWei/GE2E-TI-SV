@@ -19,7 +19,6 @@ config_dict = {
     'infer_path': os.path.join(work_dir, 'infer'),
 
     # Preprocessing
-    'nb_noises': 64,                                        # how many of the noise files to choose
     'max_ckpts': 6,                                         # max checkpoints to keep
     'sr': 16000,                                            # sample rate
     'nfft': 512,                                            # fft kernel size
@@ -47,19 +46,20 @@ config_dict = {
     'decay': 'cosine',
     'nb_iters': 1e5,                                        # max iterations
     'save_per_iters': 3000,                                 # save models per X iterations
-    'decay_per_iters': 6000,                               # decay learning rate per X iterations
+    'decay_per_iters': 8000,                                # decay learning rate per X iterations
     'log_per_iters': 100,                                   # log info per X iterations
-    'summary_per_iters':50,                                 # write summary per X iterations
-    'valid_per_iters': 300,
-    'verbose': True,
+    'summary_per_iters':100,                                 # write summary per X iterations
+    'valid_per_iters': 3000,
     'dataset': ['voxceleb'],                                # datasets to be used. if mode is set to infer,
                                                             # then all datasets are ignored
                                                             # in test mode, only one dataset is allowed
     'weights': [1.0],                                       # weights for each dataset
+    'nb_valid': 20,                                         # number of batches to be used in validation
 
     # Debug
+    'verbose': True,
     'debug': True,                                          # turn on debug info output
-    'redirect_stdout': False,
+    'redirect_stdout': True,
 }
 
 '''

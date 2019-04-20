@@ -32,9 +32,9 @@ if __name__ == "__main__":
     elif config.mode == 'test':
         print("\nTest Session")
         if os.path.isdir(config.model_path):
-            model.test(sess, os.path.join(config.model_path, 'check_point', 'model.ckpt-5'))
+            model.test(sess, get_latest_ckpt(os.path.join(config.model_path, 'check_point')))
         else:
             raise AssertionError("model path doesn't exist!")
     else:
         print("\nInfer Session")
-        model.infer(sess, path=os.path.join(config.model_path, 'check_point', 'model.ckpt-8'), thres=0.57)
+        model.infer(sess, path=get_latest_ckpt(os.path.join(config.model_path, 'check_point')), thres=0.57)

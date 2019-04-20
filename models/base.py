@@ -94,7 +94,7 @@ class Model:
         assert config.mode == 'train'
         sess.run(tf.global_variables_initializer())
         generator = BatchGenerator()
-        valid_generator = ValidBatchGenerator(nb_batches=5 * 2)
+        valid_generator = ValidBatchGenerator(nb_batches=config.nb_valid * 2)
 
         model_path = os.path.join(path, 'check_point')
         log_path = os.path.join(path, 'logs')
@@ -127,24 +127,24 @@ class Model:
 
     def valid(self, sess, generator):
         loss_acc = 0
-        for i in range(generator.nb_batches):
+        for i in range(config.nb_valid):
             _, loss_cur = sess.run([self.train_op, self.loss],
                                    feed_dict={self.batch: generator.gen_batch2()})
             loss_acc += loss_cur
-        print('validation loss: {}'.format(loss_acc / generator.nb_batches))
+        print('validation loss: {}'.format(loss_acc / config.nb_valid))
 
 
     def test(self, sess, path, nb_batch_thres=5, nb_batch_test=40):
         assert config.mode == 'test'
         def cal_ff(s, thres):
             s_thres = s > thres
-            far = sum([np.sum(s_thres[i]) - np.sum(s_thres[i, :, i]) for i in range(config.N)]) / \
-                  (config.N - 1) / config.M / config.N
-            frr = sum([config.M - np.sum(s_thres[i][:, i]) for i in range(config.N)]) / config.M / config.N
+            far = sum([np.sum(s_thres[i]) - np.sum(s_thres[i, :, i])
+                       for i in range(config.N)]) / (config.N - 1) / config.M / config.N
+            frr = sum([config.M - np.sum(s_thres[i][:, i])
+                       for i in range(config.N)]) / config.M / config.N
             return far, frr
 
         self.saver.restore(sess, path)
-
         config.train = True
         generator = BatchGenerator()
         s_mats = []
@@ -156,7 +156,7 @@ class Model:
         diff = math.inf
         EER = 0
         THRES = 0
-        for thres in [0.01 * i + 0.5 for i in range(50)]:
+        for thres in [0.01 * i for i in range(100)]:
             fars = []
             frrs = []
             for s in s_mats:

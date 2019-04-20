@@ -61,7 +61,8 @@ class ValidBatchGenerator(BatchGenerator):
 
 
 class Buffer:
-    def __init__(self, dataset='voxceleb', K_N=config.K_N, K_M=config.K_M,
+    def __init__(self, dataset='voxceleb',
+                 K_N=config.K_N, K_M=config.K_M,
                  recycle=False, mode=config.mode):
         """
         :param dataset: vctk or voxceleb
@@ -124,10 +125,9 @@ class Buffer:
         batch_1, batch_2 = [], []
         for i in sel_speakers:
             utters = self.buffer[i * self.K_M:(i + 1) * self.K_M, :]
-            utter_index = np.random.randint(0, utters.shape[0], utter_num)
-            batch_1.append(utters[utter_index])
-            utter_index = np.random.randint(0, utters.shape[0], utter_num)
-            batch_2.append(utters[utter_index])
+            utter_index = random.sample(range(utters.shape[0]), 2 * utter_num)
+            batch_1.append(utters[utter_index[:utter_num]])
+            batch_2.append(utters[utter_index[utter_num:]])
         batch_1 = np.concatenate(batch_1, axis=0)
         batch_2 = np.concatenate(batch_2, axis=0)
         if frames is None:
@@ -193,4 +193,3 @@ def gen_infer_batches():
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     buffer = Buffer(dataset='voxceleb')
-

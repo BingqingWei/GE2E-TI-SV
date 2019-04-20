@@ -74,11 +74,8 @@ norm_dict = {
 
 def normalize_batch(batch, dataset):
     dic = norm_dict[config.sr]
-
     if dataset == 'voxceleb':
-        batch -= dic['vox_mels_mean']
-        batch /= dic['vox_mels_std']
+        batch = (batch - dic['vox_mels_mean']) / dic['vox_mels_std']
     else:
-        batch -= dic['vctk_mels_mean']
-        batch /= dic['vctk_mels_std']
+        batch = (batch - dic['vctk_mels_mean']) / dic['vctk_mels_std']
     return batch
