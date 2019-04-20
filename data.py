@@ -22,7 +22,7 @@ def preemphasis(x):
     """
     return lfilter([1, -0.97], [1], x)
 
-def wav2spectro(utter_path):
+def wav2spectro(utter_path, mode=config.mode):
     utterances_spec = []
     utter, sr = librosa.core.load(utter_path, config.sr)
     utter = preemphasis(utter)
@@ -36,7 +36,7 @@ def wav2spectro(utter_path):
             mel_basis = librosa.filters.mel(sr=config.sr, n_fft=config.nfft, n_mels=config.mels)
             S = np.log10(np.dot(mel_basis, S) + 1e-6)
 
-            if config.mode != 'infer':
+            if mode != 'infer':
                 '''
                 NOTE: each interval in utterance only extracts 2 samples
                 '''
@@ -78,7 +78,7 @@ def save_spectrogram(speakers, train_path, test_path, test_split, start_sid=0):
         if i + start_sid < train_speaker_num:
             np.save(os.path.join(train_path, 'speaker_{}.npy'.format(i + start_sid)), utterances_spec)
         else:
-            np.save(os.path.join(test_path, 'speaker_{}.npy'.format(i + start_sid - train_speaker_num)), utterances_spec)
+            np.save(os.path.join(test_path, 'speaker_{}.npy'.format(i + start_sid)), utterances_spec)
 
 def save_spectrogram_voxceleb(test_split=0.1, start_sid=0):
     print('processing voxceleb dataset')
@@ -187,8 +187,27 @@ def statistics_voxceleb():
     print('Min number of wav files per speaker: {}'.format(min(wav_files)))
     print('Mean number of wav files per speaker: {}'.format(np.mean(wav_files)))
 
+def statistics_voxceleb_npy():
+    print('processing voxceleb dataset')
+    train_path = os.path.join(config.train_path, 'voxceleb')
+    test_path = os.path.join(config.test_path, 'voxceleb')
+
+    nb_utters = []
+    for npy_file in tqdm(os.listdir(train_path)):
+        array = np.load(os.path.join(train_path, npy_file))
+        nb_utters.append(array.shape[0])
+    for npy_file in tqdm(os.listdir(test_path)):
+        array = np.load(os.path.join(train_path, npy_file))
+        nb_utters.append(array.shape[0])
+
+    print('Max number of utters per speaker: {}'.format(max(nb_utters)))
+    print('Min number of utters per speaker: {}'.format(min(nb_utters)))
+    print('Mean number of utters per speaker: {}'.format(np.mean(nb_utters)))
+
+
 if __name__ == '__main__':
     #save_spectrogram_vctk()
-    save_spectrogram_voxceleb(start_sid=582)
+    #save_spectrogram_voxceleb(start_sid=1089)
     #postprocess('vctk', nb_cal_files=100)
-    statistics_voxceleb()
+    #statistics_voxceleb()
+    statistics_voxceleb_npy()

@@ -10,6 +10,8 @@ from config import *
 def normalize(x):
     return x / tf.sqrt(tf.reduce_sum(x ** 2, axis=-1, keepdims=True) + 1e-6)
 
+def embedd2center(embedd):
+    return normalize(tf.reduce_mean(tf.reshape(embedd, shape=[config.N, config.M, -1]), axis=1))
 
 def cossim(x, y, normalized=True):
     if normalized:
@@ -19,6 +21,10 @@ def cossim(x, y, normalized=True):
         y_norm = tf.sqrt(tf.reduce_sum(y ** 2) + 1e-6)
         return tf.reduce_sum(x * y) / x_norm / y_norm
 
+def center_similarity(embedd_1, embedd_2):
+    center_1 = embedd2center(embedd_1)
+    center_2 = embedd2center(embedd_2)
+    return tf.matmul(center_1, tf.transpose(center_2, perm=[1, 0]))
 
 def similarity(embedded, w, b, N=config.N, M=config.M, center=None):
     embedded_split = tf.reshape(embedded, shape=[N, M, -1])

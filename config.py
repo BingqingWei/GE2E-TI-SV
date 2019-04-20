@@ -29,17 +29,17 @@ config_dict = {
     'mels':40,
 
     # Model
-    'nb_hidden': 256,                                       # number of hidden units
-    'nb_proj': 128,                                         # number of projection units
+    'nb_hidden': 512,                                       # number of hidden units
+    'nb_proj': 256,                                         # number of projection units
     'nb_layers': 3,                                         # number of LSTM_Projection layers
     'loss':'softmax',
     'K_N': 10,                                              # K_N * N spearkers will be stored in buffer
-    'gpu_fraction': 0.8,                                    # gpu fraction
+    'gpu_fraction': 0.5,                                    # gpu fraction
 
     # Session
-    'mode': 'train',                                        # train or test
-    'N': 5,                                                 # number of speakers per batch
-    'M': 4,                                                 # number of utterances per speaker
+    'mode': 'test',                                         # train or test
+    'N': 16,                                                # number of speakers per batch
+    'M': 7,                                                 # number of utterances per speaker
     'lr': 0.01,
     'optim': ['sgd',                                        # type of the optimizer
               {'beta1': 0.9, 'beta2': 0.999}],              # additional parameters
@@ -48,7 +48,7 @@ config_dict = {
     'save_per_iters': 3000,                                 # save models per X iterations
     'decay_per_iters': 8000,                                # decay learning rate per X iterations
     'log_per_iters': 100,                                   # log info per X iterations
-    'summary_per_iters':100,                                 # write summary per X iterations
+    'summary_per_iters':100,                                # write summary per X iterations
     'valid_per_iters': 3000,
     'dataset': ['voxceleb'],                                # datasets to be used. if mode is set to infer,
                                                             # then all datasets are ignored
@@ -60,15 +60,10 @@ config_dict = {
     'verbose': True,
     'debug': True,                                          # turn on debug info output
     'redirect_stdout': True,
+    'redirect_fname': 'test.txt'
 }
 
-'''
-each speaker in buffer will have K_M * M wave files
-it's recommended to set
-K_M = average(number of wav files per speaker) / M
-'''
-config_dict['K_M'] = int(45 / config_dict['M'])
-
+assert config_dict['M'] * 2 <= 36
 assert config_dict['mode'] in ['train', 'test', 'infer']
 assert len(config_dict['dataset']) != 0
 if config_dict['mode'] == 'test':

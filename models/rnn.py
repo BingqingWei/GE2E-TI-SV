@@ -1,7 +1,7 @@
 __author__ = 'Bingqing Wei'
 import keras
 
-from models.base import *
+from models.base_2 import *
 
 class LSTM_Model(Model):
     def build_model(self, batch):

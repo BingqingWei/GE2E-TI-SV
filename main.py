@@ -1,6 +1,6 @@
 import shutil
 import glob
-from models.base import *
+from models.base_2 import *
 from models.rnn import *
 from models.cnn import *
 from config import *
@@ -14,7 +14,7 @@ def get_latest_ckpt(fpath):
 
 if __name__ == "__main__":
     if config.redirect_stdout:
-        sys.stdout = open(os.path.join('.', 'output.txt'), 'w')
+        sys.stdout = open(os.path.join('.', config.redirect_fname), 'w')
         print('stdout redirected')
 
     tf_config = tf.ConfigProto()
@@ -37,4 +37,4 @@ if __name__ == "__main__":
             raise AssertionError("model path doesn't exist!")
     else:
         print("\nInfer Session")
-        model.infer(sess, path=get_latest_ckpt(os.path.join(config.model_path, 'check_point')), thres=0.57)
+        model.infer(sess, path=get_latest_ckpt(os.path.join(config.model_path, 'check_point')), thres=0.67)

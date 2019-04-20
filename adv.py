@@ -56,14 +56,12 @@ class ValidBatchGenerator(BatchGenerator):
     def reset(self):
         self.buffers = []
         for dataset in config.dataset:
-            self.buffers.append(Buffer(dataset=dataset, K_N=self.nb_batches, K_M=1,
+            self.buffers.append(Buffer(dataset=dataset, K_N=self.nb_batches,
                                        recycle=True, mode='test'))
-
 
 class Buffer:
     def __init__(self, dataset='voxceleb',
-                 K_N=config.K_N, K_M=config.K_M,
-                 recycle=False, mode=config.mode):
+                 K_N=config.K_N, recycle=False, mode=config.mode):
         """
         :param dataset: vctk or voxceleb
         :param K_N: K_N * N speakers to be sampled
@@ -72,16 +70,16 @@ class Buffer:
         """
 
         self.dataset = dataset
-
         self.counter = 0
         self.K_N = K_N * config.N
-        self.K_M = K_M * config.M
+        self.K_M = 36 # minimum utters wrt npy file
         self.recycle = recycle
         self.count_down = self.calcCountDown()
         if mode == 'train':
             self.data_path = os.path.join(config.train_path, dataset)
         else:
             self.data_path = os.path.join(config.test_path, dataset)
+
         self.buffer = None
         self.flush()
         if config.debug:
@@ -91,7 +89,7 @@ class Buffer:
                 print('buffer countdown: ', self.count_down)
 
     def calcCountDown(self):
-        return config.K_N ** 2 * config.K_M
+        return int(config.K_N ** 2 * self.K_M / config.M)
 
     def update(self, npy_list):
         """
@@ -108,16 +106,12 @@ class Buffer:
         do_flush = self.update(npy_list)
         if not do_flush: return
 
-        del self.buffer
-        gc.collect()
         self.buffer = []
-
         sel_speakers = random.sample(npy_list, self.K_N)
         for file in sel_speakers:
             utters = np.load(os.path.join(self.data_path, file))
-            utter_index = np.random.randint(0, utters.shape[0], self.K_M)
+            utter_index = random.sample(range(utters.shape[0]), self.K_M)
             self.buffer.append(utters[utter_index])
-
         self.buffer = np.concatenate(self.buffer, axis=0)
 
     def sample2(self, speaker_num=config.N, utter_num=config.M, frames=None):
@@ -178,7 +172,6 @@ def gen_infer_batches():
     """
     :return: enrolls, verifs
     """
-
     enroll_utters = []
     verif_utters = []
     for file in os.listdir(infer_enroll_path):
@@ -188,8 +181,11 @@ def gen_infer_batches():
 
     enroll_utters = np.transpose(np.array(enroll_utters), axes=(2, 0, 1))
     verif_utters = np.transpose(np.array(verif_utters), axes=(2, 0, 1))
-    return enroll_utters, verif_utters
+    return normalize_batch(enroll_utters, config.dataset[0]), normalize_batch(verif_utters, config.dataset[0])
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
-    buffer = Buffer(dataset='voxceleb')
+    #buffer = Buffer(dataset='voxceleb')
+    gen = ValidBatchGenerator()
+    for i in range(100):
+        gen.gen_batch2()
