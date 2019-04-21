@@ -36,8 +36,9 @@ def wav2spectro(utter_path, mode=config.mode):
                 '''
                 NOTE: each interval in utterance only extracts 2 samples
                 '''
-                utterances_spec.append(S[:, :config.max_frames])
-                utterances_spec.append(S[:, -config.max_frames:])
+                steps = min(S.shape[1] // config.max_frames, 4)
+                for i in range(steps):
+                    utterances_spec.append(S[:, config.max_frames * i:config.max_frames * (i + 1)])
             else:
                 max_steps = int((S.shape[1] - avg_frames) / hop_frames) + 1
                 for i in range(max_steps):
@@ -203,7 +204,7 @@ def statistics_voxceleb_npy():
 
 if __name__ == '__main__':
     #save_spectrogram_vctk()
-    #save_spectrogram_voxceleb()
+    save_spectrogram_voxceleb(start_sid=1089)
     #postprocess('vctk', nb_cal_files=100)
     #statistics_voxceleb()
     statistics_voxceleb_npy()

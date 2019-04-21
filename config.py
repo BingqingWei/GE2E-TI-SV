@@ -59,7 +59,7 @@ config_dict = {
     # Debug
     'verbose': True,
     'debug': True,                                          # turn on debug info output
-    'redirect_stdout': False,
+    'redirect_stdout': True,
     'norm': True,                                          # if True, buffers will normalize the batches
     'redirect_fname': 'test_vctk.txt'
 }

@@ -45,6 +45,14 @@ def save_spectrogram(speakers, train_path, test_path, test_split, start_sid=0):
     :param start_sid: resume processing starting from
     :return:
     """
+
+    '''
+    processing voxceleb dataset
+    total speaker number : 1211
+    min nb_utterances: 45, max_nb_utterances: 1002
+    train : 1089, test : 122
+    min frames: 184, max frames: 4133, average frames: 331.4746267578936
+    '''
     assert 0 <= test_split < 1
     os.makedirs(train_path, exist_ok=True)
     os.makedirs(test_path, exist_ok=True)
