@@ -20,7 +20,6 @@ def preemphasis(x):
     return lfilter([1, -0.97], [1], x)
 
 def wav2spectro(utter_path, mode=config.mode):
-    utterances_spec = []
     utter, sr = librosa.core.load(utter_path, config.sr)
     utter = preemphasis(utter)
     intervals = librosa.effects.split(utter, top_db=25)
@@ -69,7 +68,7 @@ def save_spectrogram(speakers, train_path, test_path, test_split, start_sid=0):
                                                                       np.max(frames),
                                                                       np.mean(frames)))
     plt.hist(frames, bins=20)
-    plt.savefig()
+    plt.savefig(os.path.join('.', 'frames.svg'), format='svg')
 
 
 
@@ -200,7 +199,7 @@ def statistics_voxceleb_npy():
 
 if __name__ == '__main__':
     #save_spectrogram_vctk()
-    #save_spectrogram_voxceleb()
+    save_spectrogram_voxceleb()
     #postprocess('vctk', nb_cal_files=100)
     #statistics_voxceleb()
-    statistics_voxceleb_npy()
+    # statistics_voxceleb_npy()

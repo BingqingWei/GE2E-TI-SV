@@ -3,11 +3,10 @@ from models.rnn import *
 from models.cnn import *
 from config import *
 
-
-if __name__ == "__main__":
+def main():
+    if not os.path.exists(config.model_path):
+        os.mkdir(os.path.join(config.model_path))
     if config.redirect_stdout:
-        if not os.path.exists(config.model_path):
-            os.mkdir(os.path.join(config.model_path))
         sys.stdout = open(os.path.join(config.model_path, config.redirect_fname), 'w')
         print('stdout redirected')
 
@@ -15,11 +14,13 @@ if __name__ == "__main__":
     tf_config.gpu_options.per_process_gpu_memory_fraction = config.gpu_fraction
     tf.reset_default_graph()
     sess = tf.Session(config=tf_config)
-    model = OLD_LSTM_Model()
+    model = LSTM_Model()
+
     if config.mode == 'train':
         print("\nTraining Session")
         if os.path.exists(config.model_path):
             shutil.rmtree(config.model_path)
+        shutil.copy(os.path.join('.', 'config.py'), config.model_path)
         os.makedirs(config.model_path)
         model.train(sess, config.model_path)
 
@@ -33,3 +34,6 @@ if __name__ == "__main__":
     else:
         print("\nInfer Session")
         model.infer(sess, path=get_latest_ckpt(os.path.join(config.model_path, 'check_point')), thres=0.67)
+
+if __name__ == "__main__":
+    main()

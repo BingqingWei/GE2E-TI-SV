@@ -29,12 +29,12 @@ config_dict = {
     'mels':40,
 
     # Model
-    'nb_hidden': 384,                                       # number of hidden units
-    'nb_proj': 128,                                         # number of projection units
+    'nb_hidden': 512,                                       # number of hidden units
+    'nb_proj': 256,                                         # number of projection units
     'nb_layers': 3,                                         # number of LSTM_Projection layers
     'loss':'softmax',
     'K_N': 10,                                              # K_N * N spearkers will be stored in buffer
-    'gpu_fraction': 0.7,                                    # gpu fraction
+    'gpu_fraction': 0.8,                                    # gpu fraction
 
     # Session
     'mode': 'test',                                         # train or test
@@ -59,8 +59,8 @@ config_dict = {
     # Debug
     'verbose': True,
     'debug': True,                                          # turn on debug info output
-    'redirect_stdout': True,
-    'norm': False,                                          # if True, buffers will normalize the batches
+    'redirect_stdout': False,
+    'norm': True,                                          # if True, buffers will normalize the batches
     'redirect_fname': 'test_vctk.txt'
 }
 

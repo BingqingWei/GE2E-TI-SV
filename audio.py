@@ -9,6 +9,14 @@ import time
 import pyaudio
 import wave
 import os
+from adv import infer_enroll_path, infer_verif_path
+from config import *
+from main import *
+
+def clear_and_make(fdir):
+    if os.path.exists(fdir):
+        shutil.rmtree(fdir)
+    os.mkdir(fdir)
 
 class Recorder(object):
     def __init__(self, channels=1, rate=44100, frames_per_buffer=1024):
@@ -86,8 +94,28 @@ class RecordingFile(object):
 
 if __name__ == '__main__':
     recorder = Recorder()
-    wav_file = recorder.open(os.path.join('.', 'record.wav'))
-    key = input('press any key to record')
-    wav_file.start_recording()
-    key = input('press any key to stop recording')
-    wav_file.close()
+    clear_and_make(infer_verif_path)
+    clear_and_make(infer_enroll_path)
+
+    print('Enrollment start')
+    for i in range(4):
+        wav_file = recorder.open(os.path.join(infer_enroll_path, 'record-{}.wav'.format(i)))
+        input('press any key to record')
+        wav_file.start_recording()
+        input('press any key to stop recording')
+        wav_file.close()
+
+    print('Verification start')
+    for i in range(4):
+        wav_file = recorder.open(os.path.join(infer_verif_path, 'record-{}.wav'.format(i)))
+        input('press any key to record')
+        wav_file.start_recording()
+        input('press any key to stop recording')
+        wav_file.close()
+
+    config.norm = True
+    config.redirect_stdout = False
+    config.mode = 'infer'
+    main()
+
+
