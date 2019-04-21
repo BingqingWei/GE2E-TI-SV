@@ -3,6 +3,7 @@ from scipy.signal import lfilter
 
 from utils import *
 from config import *
+from matplotlib import pyplot as plt
 
 vctk_path = os.path.join(data_path, 'VCTK')
 voxceleb_path = os.path.join(data_path, 'voxceleb1')
@@ -23,6 +24,8 @@ def wav2spectro(utter_path, mode=config.mode):
     utter, sr = librosa.core.load(utter_path, config.sr)
     utter = preemphasis(utter)
     intervals = librosa.effects.split(utter, top_db=25)
+
+    frames = []
     for interval in intervals:
         if (interval[1] - interval[0]) > utter_min_len:
             utter_part = utter[interval[0]:interval[1]]
@@ -31,18 +34,8 @@ def wav2spectro(utter_path, mode=config.mode):
             S = np.abs(S) ** 2
             mel_basis = librosa.filters.mel(sr=config.sr, n_fft=config.nfft, n_mels=config.mels)
             S = np.log10(np.dot(mel_basis, S) + 1e-6)
-
-            if mode != 'infer':
-                '''
-                NOTE: each interval in utterance only extracts 2 samples
-                '''
-                utterances_spec.append(S[:, :config.max_frames])
-                utterances_spec.append(S[:, -config.max_frames:])
-            else:
-                max_steps = int((S.shape[1] - avg_frames) / hop_frames) + 1
-                for i in range(max_steps):
-                    utterances_spec.append(S[:, hop_frames * i : hop_frames * i + avg_frames])
-    return utterances_spec
+            frames.append(S.shape[1])
+    return frames
 
 def save_spectrogram(speakers, train_path, test_path, test_split, start_sid=0):
     """
@@ -66,15 +59,19 @@ def save_spectrogram(speakers, train_path, test_path, test_split, start_sid=0):
     print('min nb_utterances: {}, max_nb_utterances: {}'.format(np.min(nb_utters), np.max(nb_utters)))
     print('train : {}, test : {}'.format(train_speaker_num, total_speaker_num - train_speaker_num))
 
+    frames = []
     for i, files in enumerate(tqdm(speakers[start_sid:])):
-        utterances_spec = []
         for utter_path in files:
-            utterances_spec.extend(wav2spectro(utter_path))
+            frames.extend(wav2spectro(utter_path))
 
-        if i + start_sid < train_speaker_num:
-            np.save(os.path.join(train_path, 'speaker_{}.npy'.format(i + start_sid)), utterances_spec)
-        else:
-            np.save(os.path.join(test_path, 'speaker_{}.npy'.format(i + start_sid)), utterances_spec)
+    frames = np.array(frames)
+    print('min frames: {}, max frames: {}, average frames: {}'.format(np.min(frames),
+                                                                      np.max(frames),
+                                                                      np.mean(frames)))
+    plt.hist(frames, bins=20)
+    plt.savefig()
+
+
 
 def save_spectrogram_voxceleb(test_split=0.1, start_sid=0):
     print('processing voxceleb dataset')

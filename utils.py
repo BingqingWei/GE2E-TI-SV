@@ -5,7 +5,15 @@ import librosa
 import matplotlib.pyplot as plt
 import random
 import os
+import glob
 from config import *
+
+def get_latest_ckpt(fpath):
+    files = glob.glob(os.path.join(fpath, 'model.ckpt-*.meta'))
+    files = [x[:-5] for x in files]
+    files.sort()
+    if len(files) == 0: return None
+    return files[-1]
 
 def normalize(x):
     return x / tf.sqrt(tf.reduce_sum(x ** 2, axis=-1, keepdims=True) + 1e-6)

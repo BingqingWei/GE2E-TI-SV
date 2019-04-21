@@ -7,9 +7,6 @@ from utils import *
 from config import *
 from adv import *
 
-def embedd2center(embedd):
-    return normalize(tf.reduce_mean(tf.reshape(embedd, shape=[config.N, config.M, -1]), axis=1))
-
 class Model:
     def __init__(self):
         if config.mode == 'infer':
@@ -66,9 +63,7 @@ class Model:
                     else:
                         grads_rescale.append(g)
 
-                if config.debug:
-                    tf.summary.scalar('gradient_norm', tf.global_norm(grads_rescale))
-                    tf.summary.scalar('learning_rate', self.lr)
+                if config.debug: tf.summary.scalar('gradient_norm', tf.global_norm(grads_rescale))
                 grads_rescale, _ = tf.clip_by_global_norm(grads_rescale, 3.0)
                 self.train_op = optimizer.apply_gradients(zip(grads_rescale, params), global_step=self.global_step)
                 variable_count = np.sum(np.array([np.prod(np.array(v.get_shape().as_list())) for v in trainable_vars]))
@@ -77,10 +72,7 @@ class Model:
                 self.merged = tf.summary.merge_all()
 
             elif config.mode == 'test':
-                # concatenate [enroll, verif]
-                enroll_embed = embedd2center(embedd_01)
-                verif_embed = embedd_02
-                self.s_mat = similarity(embedded=verif_embed, w=1.0, b=0.0, center=enroll_embed)
+                self.s_mat = center_similarity(embedd_01, embedd_02)
             else: raise ValueError()
         self.saver = tf.train.Saver()
 
@@ -136,14 +128,12 @@ class Model:
         print('validation loss: {}'.format(loss_acc / config.nb_valid))
 
 
-    def test(self, sess, path, nb_batch_thres=100, nb_batch_test=400):
+    def test(self, sess, path, nb_batch_thres=100, nb_batch_test=1000):
         assert config.mode == 'test'
         def cal_ff(s, thres):
             s_thres = s > thres
-            far = sum([np.sum(s_thres[i, :, :]) - np.sum(s_thres[i, :, i])
-                       for i in range(config.N)]) / (config.N - 1) / config.M / config.N
-            frr = sum([config.testM - np.sum(s_thres[i, :, i])
-                       for i in range(config.N)]) / config.M / config.N
+            far = (np.sum(s_thres) - config.N) / float(config.N * (config.N - 1))
+            frr = (config.N - np.trace(s_thres)) / float(config.N)
             return far, frr
 
         self.saver.restore(sess, path)
@@ -152,15 +142,11 @@ class Model:
         s_mats = []
         for i in range(nb_batch_thres):
             s = sess.run(self.s_mat, feed_dict={self.batch: generator.gen_batch2()})
-            s = s.reshape([config.N, config.M, -1])
             s_mats.append(s)
 
-        diff = math.inf
-        EER = 0
-        THRES = 0
+        diff, EER, THRES = math.inf, 0, 0
         for thres in [0.01 * i for i in range(100)]:
-            fars = []
-            frrs = []
+            fars, frrs = [], []
             for s in s_mats:
                 far, frr = cal_ff(s, thres)
                 fars.append(far)
@@ -179,8 +165,6 @@ class Model:
         EERS = []
         for i in range(nb_batch_test):
             s = sess.run(self.s_mat, feed_dict={self.batch: generator.gen_batch2()})
-            s = s.reshape([config.N, config.M, -1])
-
             far, frr = cal_ff(s, THRES)
             EERS.append((far + frr) / 2)
 

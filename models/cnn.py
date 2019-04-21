@@ -1,6 +1,5 @@
 __author__ = 'Bingqing Wei'
 
-import tensorflow as tf
 from models.base import *
 
 def residual_block(prev, filters, kernel):
@@ -21,6 +20,8 @@ class ResidualCNN(Model):
         for i in range(16):
             x = residual_block(x, filters=32, kernel=(32,))
         encoded = tf.keras.layers.Conv1D(filters=1, kernel_size=(32,), activation='relu')(x)
+
+        # shape = (batch_size, embedding_size)
         encoded = tf.squeeze(encoded, axis=-1)
         return encoded
 
