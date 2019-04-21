@@ -3,6 +3,19 @@ import keras
 
 from models.base_2 import *
 
+class OLD_LSTM_Model(Model):
+    def build_model(self, batch):
+        with tf.variable_scope('lstm'):
+            cells = [tf.nn.rnn_cell.LSTMCell(num_units=config.nb_hidden, num_proj=config.nb_proj,
+                                             initializer=tf.initializers.glorot_normal)
+                     for i in range(config.nb_layers)]
+            lstm = tf.nn.rnn_cell.MultiRNNCell(cells)
+            outputs, _ = tf.nn.dynamic_rnn(cell=lstm, inputs=batch, dtype=tf.float32, time_major=True)
+            embedded = outputs[-1]
+            # shape = (N * M, nb_proj)
+            embedded = normalize(embedded)
+        return embedded
+
 class LSTM_Model(Model):
     def build_model(self, batch):
         with tf.variable_scope('lstm'):

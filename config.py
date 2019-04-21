@@ -2,7 +2,7 @@ __author__ = 'Bingqing Wei'
 import os
 
 data_path = r'E:\Data'
-work_dir = r'.\data'
+work_dir = r'.\data-16000'
 
 class Config: pass
 
@@ -29,12 +29,12 @@ config_dict = {
     'mels':40,
 
     # Model
-    'nb_hidden': 512,                                       # number of hidden units
-    'nb_proj': 256,                                         # number of projection units
+    'nb_hidden': 384,                                       # number of hidden units
+    'nb_proj': 128,                                         # number of projection units
     'nb_layers': 3,                                         # number of LSTM_Projection layers
     'loss':'softmax',
     'K_N': 10,                                              # K_N * N spearkers will be stored in buffer
-    'gpu_fraction': 0.5,                                    # gpu fraction
+    'gpu_fraction': 0.7,                                    # gpu fraction
 
     # Session
     'mode': 'test',                                         # train or test
@@ -60,7 +60,8 @@ config_dict = {
     'verbose': True,
     'debug': True,                                          # turn on debug info output
     'redirect_stdout': True,
-    'redirect_fname': 'test.txt'
+    'norm': False,                                          # if True, buffers will normalize the batches
+    'redirect_fname': 'test_vctk.txt'
 }
 
 assert config_dict['M'] * 2 <= 36

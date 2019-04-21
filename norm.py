@@ -73,6 +73,9 @@ norm_dict = {
 
 
 def normalize_batch(batch, dataset):
+    if not config.norm:
+        return batch
+
     dic = norm_dict[config.sr]
     if dataset == 'voxceleb':
         batch = (batch - dic['vox_mels_mean']) / dic['vox_mels_std']
