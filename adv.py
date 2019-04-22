@@ -172,12 +172,26 @@ def gen_infer_batches():
     """
     :return: enrolls, verifs
     """
+    def print_error_and_exit(process):
+        msg = '{} utterances are too bad to process.\n' \
+              'The reasons can be:\n' \
+              '1. too short.\n' \
+              '2. too much silence.\n' \
+              '3. not loud enough.'.format(process)
+        print(msg)
+        exit()
+
     enroll_utters = []
     verif_utters = []
     for file in os.listdir(infer_enroll_path):
         enroll_utters.extend(wav2spectro(os.path.join(infer_enroll_path, file)))
     for file in os.listdir(infer_verif_path):
         verif_utters.extend(wav2spectro(os.path.join(infer_verif_path, file)))
+
+    if len(enroll_utters) < 3:
+        print_error_and_exit('Enrollment')
+    if len(verif_utters) < 2:
+        print_error_and_exit('Verification')
 
     enroll_utters = np.transpose(np.array(enroll_utters), axes=(2, 0, 1))
     verif_utters = np.transpose(np.array(verif_utters), axes=(2, 0, 1))

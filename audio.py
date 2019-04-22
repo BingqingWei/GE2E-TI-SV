@@ -92,32 +92,38 @@ class RecordingFile(object):
         wavefile.setframerate(self.rate)
         return wavefile
 
+def record_one(recorder, fdir, fname, min_second=4):
+    while True:
+        wav_file = recorder.open(os.path.join(fdir, fname))
+        input('press enter to record')
+        start = time.time()
+        wav_file.start_recording()
+        input('press enter to stop recording')
+        end = time.time()
+        wav_file.close()
+        seconds = end - start
+        if seconds < min_second:
+            print('Too short, pleas try again')
+        else:
+            break
+    print('saved to {}\n'.format(os.path.join(fdir, fname)))
+
+
 if __name__ == '__main__':
-    '''
+    assert config.mode == 'infer'
+    assert not config.redirect_stdout
+
     recorder = Recorder()
     clear_and_make(infer_verif_path)
     clear_and_make(infer_enroll_path)
-
     print('Enrollment start')
-    for i in range(4):
-        wav_file = recorder.open(os.path.join(infer_enroll_path, 'record-{}.wav'.format(i)))
-        input('press any key to record')
-        wav_file.start_recording()
-        input('press any key to stop recording')
-        wav_file.close()
+    for i in range(3):
+        record_one(recorder, infer_enroll_path, 'record-{}.wav'.format(i), min_second=3)
 
     print('Verification start')
-    for i in range(4):
-        wav_file = recorder.open(os.path.join(infer_verif_path, 'record-{}.wav'.format(i)))
-        input('press any key to record')
-        wav_file.start_recording()
-        input('press any key to stop recording')
-        wav_file.close()
-    '''
+    for i in range(1):
+        record_one(recorder, infer_verif_path, 'record-{}.wav'.format(i), min_second=5)
 
-    config.norm = True
-    config.redirect_stdout = False
-    config.mode = 'infer'
     main()
 
 

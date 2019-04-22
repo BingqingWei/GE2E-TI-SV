@@ -37,7 +37,7 @@ config_dict = {
     'gpu_fraction': 0.6,                                    # gpu fraction
 
     # Session
-    'mode': 'test',                                         # train or test
+    'mode': 'infer',                                        # train or test
     'N': 16,                                                # number of speakers per batch
     'M': 7,                                                 # number of utterances per speaker
     'lr': 0.01,
@@ -59,7 +59,7 @@ config_dict = {
     # Debug
     'verbose': True,
     'debug': True,                                          # turn on debug info output
-    'redirect_stdout': True,
+    'redirect_stdout': False,
     'norm': True,                                          # if True, buffers will normalize the batches
     'redirect_fname': 'test.txt'
 }
