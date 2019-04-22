@@ -9,14 +9,13 @@ import time
 import pyaudio
 import wave
 import os
-from adv import infer_enroll_path, infer_verif_path
-from config import *
-from main import *
+import shutil
 
-def clear_and_make(fdir):
-    if os.path.exists(fdir):
-        shutil.rmtree(fdir)
-    os.mkdir(fdir)
+def mk_or_not(fpath):
+    if not os.path.exists(fpath):
+        os.mkdir(fpath)
+    files = os.listdir(fpath)
+    return len(files)
 
 class Recorder(object):
     def __init__(self, channels=1, rate=44100, frames_per_buffer=1024):
@@ -110,17 +109,10 @@ def record_one(recorder, fdir, fname, min_second=4):
 
 
 if __name__ == '__main__':
-    assert config.mode == 'infer'
-    assert not config.redirect_stdout
-
     recorder = Recorder()
-    clear_and_make(infer_verif_path)
-    clear_and_make(infer_enroll_path)
+    store_path = './audio'
+    base = mk_or_not(store_path)
 
-    print('Enrollment start')
-    for i in range(3):
-        record_one(recorder, infer_enroll_path, 'record-{}.wav'.format(i), min_second=3)
-    print('Verification start')
-    for i in range(1):
-        record_one(recorder, infer_verif_path, 'record-{}.wav'.format(i), min_second=5)
-    main()
+    print('Recording start')
+    for i in range(100000):
+        record_one(recorder, store_path, 'record-{}.wav'.format(base + i), min_second=5)

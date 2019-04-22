@@ -133,7 +133,7 @@ class Model:
         return loss_acc / config.nb_valid
 
 
-    def test(self, sess, path, nb_batch_thres=100, nb_batch_test=1000):
+    def test(self, sess, path, nb_batch_thres=100, nb_batch_test=3000):
         assert config.mode == 'test'
         def cal_ff(s, thres):
             s_thres = s > thres
@@ -177,6 +177,23 @@ class Model:
         print('(test) EER: {}'.format(EER))
 
 
+    def restore(self, sess, path):
+        self.saver.restore(sess, path)
+
+    def infer_no_restore(self, sess, thres):
+        assert config.mode == 'infer'
+        enrolls, verifs = gen_infer_batches()
+        s = sess.run(self.s, feed_dict={
+            self.enroll: enrolls,
+            self.verif: verifs
+        })
+        if s > thres:
+            print('same speaker')
+            return True
+        else:
+            print('different speakers')
+            return False
+
     def infer(self, sess, path, thres=0.41):
         assert config.mode == 'infer'
         self.saver.restore(sess, path)
@@ -187,5 +204,7 @@ class Model:
         })
         if s > thres:
             print('same speaker')
+            return True
         else:
             print('different speakers')
+            return False

@@ -179,7 +179,7 @@ def gen_infer_batches():
               '2. too much silence.\n' \
               '3. not loud enough.'.format(process)
         print(msg)
-        exit()
+        raise Exception()
 
     enroll_utters = []
     verif_utters = []
@@ -188,9 +188,9 @@ def gen_infer_batches():
     for file in os.listdir(infer_verif_path):
         verif_utters.extend(wav2spectro(os.path.join(infer_verif_path, file)))
 
-    if len(enroll_utters) < 3:
+    if len(enroll_utters) == 0:
         print_error_and_exit('Enrollment')
-    if len(verif_utters) < 2:
+    if len(verif_utters) == 0:
         print_error_and_exit('Verification')
 
     enroll_utters = np.transpose(np.array(enroll_utters), axes=(2, 0, 1))

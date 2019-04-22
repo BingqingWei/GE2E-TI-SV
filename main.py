@@ -18,7 +18,7 @@ def main():
     tf_config.gpu_options.per_process_gpu_memory_fraction = config.gpu_fraction
     tf.reset_default_graph()
     sess = tf.Session(config=tf_config)
-    model = LSTM_Model()
+    model = GRU_Model()
 
     if config.mode == 'train':
         print("\nTraining Session")
@@ -34,7 +34,7 @@ def main():
 
     else:
         print("\nInfer Session")
-        model.infer(sess, path=get_latest_ckpt(os.path.join(config.model_path, 'check_point')), thres=0.67)
+        model.infer(sess, path=get_latest_ckpt(os.path.join(config.model_path, 'check_point')), thres=0.6)
 
 if __name__ == "__main__":
     main()

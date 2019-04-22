@@ -29,15 +29,15 @@ config_dict = {
     'mels':40,
 
     # Model
-    'nb_hidden': 512,                                       # number of hidden units
-    'nb_proj': 256,                                         # number of projection units
+    'nb_hidden': 256,                                       # number of hidden units
+    'nb_proj': 128,                                         # number of projection units
     'nb_layers': 3,                                         # number of LSTM_Projection layers
     'loss':'softmax',
     'K_N': 10,                                              # K_N * N spearkers will be stored in buffer
     'gpu_fraction': 0.6,                                    # gpu fraction
 
     # Session
-    'mode': 'infer',                                        # train or test
+    'mode': 'infer',                                         # train or test
     'N': 16,                                                # number of speakers per batch
     'M': 7,                                                 # number of utterances per speaker
     'lr': 0.01,
@@ -59,11 +59,11 @@ config_dict = {
     'verbose': True,
     'debug': True,                                          # turn on debug info output
     'redirect_stdout': False,
-    'norm': True,                                          # if True, buffers will normalize the batches
-    'redirect_fname': 'test.txt'
+    'norm': False,                                          # if True, buffers will normalize the batches
+    'redirect_fname': 'test-3000.txt'
 }
 
-assert config_dict['M'] * 2 <= 33
+assert config_dict['M'] * 2 <= 22
 assert config_dict['mode'] in ['train', 'test', 'infer']
 assert len(config_dict['dataset']) != 0
 if config_dict['mode'] == 'test':
