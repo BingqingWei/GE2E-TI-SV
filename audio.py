@@ -116,14 +116,11 @@ if __name__ == '__main__':
     recorder = Recorder()
     clear_and_make(infer_verif_path)
     clear_and_make(infer_enroll_path)
+
     print('Enrollment start')
     for i in range(3):
         record_one(recorder, infer_enroll_path, 'record-{}.wav'.format(i), min_second=3)
-
     print('Verification start')
     for i in range(1):
         record_one(recorder, infer_verif_path, 'record-{}.wav'.format(i), min_second=5)
-
     main()
-
-

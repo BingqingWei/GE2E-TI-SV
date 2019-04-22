@@ -97,6 +97,7 @@ class Model:
 
         writer = tf.summary.FileWriter(log_path, sess.graph)
         loss_acc = 0
+        best_valid = np.inf
         for i in range(int(config.nb_iters)):
             _, loss_cur, summary = sess.run([self.train_op, self.loss, self.merged],
                                             feed_dict={self.batch: generator.gen_batch2()})
@@ -112,12 +113,15 @@ class Model:
                 writer.flush()
 
             if (i + 1) % config.save_per_iters == 0:
+                valid_loss = self.valid(sess, valid_generator)
+                if valid_loss > best_valid:
+                    print('validation loss is too large, skipping')
+                    continue
+                best_valid = min(best_valid, valid_loss)
                 self.saver.save(sess, os.path.join(path, 'check_point', 'model.ckpt'),
                                 global_step=i // config.save_per_iters)
                 if config.verbose: print('model is saved')
 
-            if (i + 1) % config.valid_per_iters == 0:
-                self.valid(sess, valid_generator)
 
     def valid(self, sess, generator):
         loss_acc = 0
@@ -126,6 +130,7 @@ class Model:
                                    feed_dict={self.batch: generator.gen_batch2()})
             loss_acc += loss_cur
         print('validation loss: {}'.format(loss_acc / config.nb_valid))
+        return loss_acc / config.nb_valid
 
 
     def test(self, sess, path, nb_batch_thres=100, nb_batch_test=1000):

@@ -49,12 +49,11 @@ config_dict = {
     'decay_per_iters': 8000,                                # decay learning rate per X iterations
     'log_per_iters': 100,                                   # log info per X iterations
     'summary_per_iters':100,                                # write summary per X iterations
-    'valid_per_iters': 3000,
     'dataset': ['voxceleb'],                                # datasets to be used. if mode is set to infer,
                                                             # then all datasets are ignored
                                                             # in test mode, only one dataset is allowed
     'weights': [1.0],                                       # weights for each dataset
-    'nb_valid': 20,                                         # number of batches to be used in validation
+    'nb_valid': 50,                                         # number of batches to be used in validation
 
     # Debug
     'verbose': True,
