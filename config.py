@@ -34,7 +34,7 @@ config_dict = {
     'nb_layers': 3,                                         # number of LSTM_Projection layers
     'loss':'softmax',
     'K_N': 10,                                              # K_N * N spearkers will be stored in buffer
-    'gpu_fraction': 0.8,                                    # gpu fraction
+    'gpu_fraction': 0.6,                                    # gpu fraction
 
     # Session
     'mode': 'test',                                         # train or test
@@ -61,10 +61,10 @@ config_dict = {
     'debug': True,                                          # turn on debug info output
     'redirect_stdout': True,
     'norm': True,                                          # if True, buffers will normalize the batches
-    'redirect_fname': 'test_vctk.txt'
+    'redirect_fname': 'test.txt'
 }
 
-assert config_dict['M'] * 2 <= 36
+assert config_dict['M'] * 2 <= 33
 assert config_dict['mode'] in ['train', 'test', 'infer']
 assert len(config_dict['dataset']) != 0
 if config_dict['mode'] == 'test':

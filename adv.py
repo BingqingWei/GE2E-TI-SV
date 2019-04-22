@@ -72,7 +72,7 @@ class Buffer:
         self.dataset = dataset
         self.counter = 0
         self.K_N = K_N * config.N
-        self.K_M = 36 # minimum utters wrt npy file
+        self.K_M = 22 # minimum utters wrt npy file
         self.recycle = recycle
         self.count_down = self.calcCountDown()
         if mode == 'train':

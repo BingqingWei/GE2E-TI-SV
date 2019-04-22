@@ -93,6 +93,7 @@ class RecordingFile(object):
         return wavefile
 
 if __name__ == '__main__':
+    '''
     recorder = Recorder()
     clear_and_make(infer_verif_path)
     clear_and_make(infer_enroll_path)
@@ -112,6 +113,7 @@ if __name__ == '__main__':
         wav_file.start_recording()
         input('press any key to stop recording')
         wav_file.close()
+    '''
 
     config.norm = True
     config.redirect_stdout = False

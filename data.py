@@ -194,8 +194,14 @@ def statistics_voxceleb_npy():
         array = np.load(os.path.join(train_path, npy_file))
         nb_utters.append(array.shape[0])
     for npy_file in tqdm(os.listdir(test_path)):
-        array = np.load(os.path.join(train_path, npy_file))
+        array = np.load(os.path.join(test_path, npy_file))
         nb_utters.append(array.shape[0])
+
+    '''
+    Max number of utters per speaker: 970
+    Min number of utters per speaker: 22
+    Mean number of utters per speaker: 194.532617671346
+    '''
 
     print('Max number of utters per speaker: {}'.format(max(nb_utters)))
     print('Min number of utters per speaker: {}'.format(min(nb_utters)))
@@ -204,7 +210,7 @@ def statistics_voxceleb_npy():
 
 if __name__ == '__main__':
     #save_spectrogram_vctk()
-    save_spectrogram_voxceleb(start_sid=1089)
+    #save_spectrogram_voxceleb(start_sid=1089)
     #postprocess('vctk', nb_cal_files=100)
     #statistics_voxceleb()
     statistics_voxceleb_npy()

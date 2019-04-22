@@ -18,7 +18,7 @@ def main():
     tf_config.gpu_options.per_process_gpu_memory_fraction = config.gpu_fraction
     tf.reset_default_graph()
     sess = tf.Session(config=tf_config)
-    model = OLD_LSTM_Model()
+    model = LSTM_Model()
 
     if config.mode == 'train':
         print("\nTraining Session")
