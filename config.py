@@ -38,7 +38,7 @@ config_dict = {
     'gpu_fraction': 0.6,                                    # gpu fraction
 
     # Session
-    'mode': 'infer',                                        # train or test
+    'mode': 'train',                                        # train or test
     'N': 16,                                                # number of speakers per batch
     'M': 7,                                                 # number of utterances per speaker
     'lr': 0.001,

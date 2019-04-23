@@ -29,6 +29,16 @@ class BatchGenerator:
             r_sels.append(new_sel)
         return np.concatenate(batches, axis=1), r_sels
 
+    def gen_batch0(self):
+        batches = []
+        if config.mode == 'train':
+            frames = np.random.randint(config.min_frames, config.max_frames)
+        else: frames = config.mid_frames
+        for buffer in self.buffers:
+            new_batch, new_sel = self.random_batch(buffer, selected_files=None, frames=frames)
+            batches.append(new_batch)
+        return np.concatenate(batches, axis=1)
+
     def gen_batch2(self):
         batches = []
         if config.mode == 'train':
@@ -40,7 +50,6 @@ class BatchGenerator:
 
         # shape=(frames, N * M * 2 * len(datasets), mels)
         return np.concatenate(batches, axis=1)
-
 
     def random_batch(self, buffer, selected_files=None, frames=None):
         return buffer.sample(sel_speakers=selected_files, frames=frames)

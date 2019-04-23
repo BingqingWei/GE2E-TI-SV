@@ -1,7 +1,6 @@
 __author__ = 'Bingqing Wei'
-import keras
 
-from models.baseline.base import *
+from baseline.base import *
 
 class OLD_LSTM_Model(Model):
     def build_model(self, batch):

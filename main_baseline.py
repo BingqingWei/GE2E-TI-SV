@@ -1,6 +1,6 @@
 import shutil
 from models.rnn import *
-from models.baseline.rnn import *
+from baseline.rnn import *
 from config import *
 
 def main():

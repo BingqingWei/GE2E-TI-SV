@@ -214,7 +214,7 @@ def statistics_voxceleb_npy():
 
 if __name__ == '__main__':
     #save_spectrogram_vctk()
-    #save_spectrogram_voxceleb(start_sid=1089)
+    save_spectrogram_voxceleb()
     #postprocess('vctk', nb_cal_files=100)
     #statistics_voxceleb()
     statistics_voxceleb_npy()

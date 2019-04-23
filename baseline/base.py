@@ -91,7 +91,7 @@ class Model:
         best_valid = np.inf
         for i in range(int(config.nb_iters)):
             _, loss_cur, summary = sess.run([self.train_op, self.loss, self.merged],
-                                            feed_dict={self.batch: generator.gen_batch2()})
+                                            feed_dict={self.batch: generator.gen_batch0()})
             loss_acc += loss_cur
 
             if (i + 1) % config.log_per_iters == 0:
@@ -117,7 +117,7 @@ class Model:
     def valid(self, sess, generator):
         loss_acc = 0
         for i in range(config.nb_valid):
-            loss_cur = sess.run(self.loss, feed_dict={self.batch: generator.gen_batch()})
+            _, loss_cur = sess.run([self.train_op, self.loss], feed_dict={self.batch: generator.gen_batch0()})
             loss_acc += loss_cur
         print('validation loss: {}'.format(loss_acc / config.nb_valid))
         return loss_acc / config.nb_valid
@@ -136,7 +136,7 @@ class Model:
         generator = BatchGenerator()
         s_mats = []
         for i in range(nb_batch_thres):
-            s = sess.run(self.s_mat, feed_dict={self.batch: generator.gen_batch2()})
+            s = sess.run(self.s_mat, feed_dict={self.batch: generator.gen_batch0()})
             s_mats.append(s)
 
         diff, EER, THRES = math.inf, 0, 0
@@ -159,7 +159,7 @@ class Model:
         generator.reset()
         EERS = []
         for i in range(nb_batch_test):
-            s = sess.run(self.s_mat, feed_dict={self.batch: generator.gen_batch2()})
+            s = sess.run(self.s_mat, feed_dict={self.batch: generator.gen_batch0()})
             far, frr = cal_ff(s, THRES)
             EERS.append((far + frr) / 2)
 
