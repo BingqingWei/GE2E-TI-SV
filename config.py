@@ -29,6 +29,7 @@ config_dict = {
     'mels':40,
 
     # Model
+    'tb': True,
     'nb_hidden': 256,                                       # number of hidden units
     'nb_proj': 128,                                         # number of projection units
     'nb_layers': 3,                                         # number of LSTM_Projection layers
