@@ -117,8 +117,7 @@ class Model:
     def valid(self, sess, generator):
         loss_acc = 0
         for i in range(config.nb_valid):
-            _, loss_cur = sess.run([self.train_op, self.loss],
-                                   feed_dict={self.batch: generator.gen_batch2()})
+            loss_cur = sess.run(self.loss, feed_dict={self.batch: generator.gen_batch()})
             loss_acc += loss_cur
         print('validation loss: {}'.format(loss_acc / config.nb_valid))
         return loss_acc / config.nb_valid
