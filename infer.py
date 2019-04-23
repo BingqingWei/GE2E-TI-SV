@@ -16,40 +16,50 @@ def cross_test(func):
             l.append(os.path.join(speaker_path, speaker, file))
         files[speaker] = l
 
-    total = 0
-    passed = 0
+    true_positive = 0.0
+    true_negative = 0.0
+    false_positive = 0.0
+    false_negative = 0.0
     for i in range(len(speakers)):
         for j in range(len(speakers)):
             enrolls = files[speakers[i]]
             verifs = files[speakers[j]]
             if i == j:
-                for k in range(len(enrolls)):
-                    copy_to_infer(enrolls[:k] + enrolls[k + 1:], [enrolls[k]])
+                for k in range(len(enrolls) - 1):
+                    copy_to_infer(enrolls[:k] + enrolls[k + 2:], [enrolls[k], enrolls[k + 1]])
                     try:
                         if not func():
                             print('Failure in detecting speaker-{}'.format(speakers[i]))
                             save_failure()
-                            total += 1
+                            false_negative += 1
                         else:
-                            total += 1
-                            passed += 1
+                            true_positive += 1
                     except Exception as ex:
                         print('Skipping')
             else:
-                for k in range(len(verifs)):
-                    copy_to_infer(enrolls, verifs)
+                for k in range(7):
+                    enroll_idx = random.sample(range(len(enrolls)), min(len(enrolls), 4))
+                    verif_idx = random.sample(range(len(verifs)), min(len(verifs), 2))
+                    copy_to_infer([enrolls[x] for x in enroll_idx], [verifs[x] for x in verif_idx])
                     try:
                         if func():
                             print('Failure in distinguishing speaker-{} & speaker-{}'
                                   .format(speakers[i], speakers[j]))
                             save_failure()
-                            total += 1
+                            false_positive += 1
                         else:
-                            total += 1
-                            passed += 1
+                            true_negative += 1
                     except Exception as ex:
                         print('Skipping')
-    print('total tests-{}, passed tests-{}, failed tests-{}'.format(total, passed, total - passed))
+    print('false negative rate-{}\n'
+          'false positive rate-{}\n'
+          'accuracy-{}\n'
+          'total-{}'.format(
+        false_positive / (false_positive + true_negative),
+        false_negative / (false_negative + true_positive),
+        (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative),
+        int(false_negative + false_positive + true_negative + true_positive)
+    ))
 
 
 
@@ -82,5 +92,5 @@ if __name__ == '__main__':
     model = GRU_Model()
     model.restore(sess, get_latest_ckpt(os.path.join(config.model_path, 'check_point')))
     print("\nInfer Session")
-    cross_test(lambda : model.infer_no_restore(sess, thres=0.6))
+    cross_test(lambda : model.infer_no_restore(sess, thres=0.61))
 

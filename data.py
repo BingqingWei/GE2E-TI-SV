@@ -4,12 +4,16 @@ from scipy.signal import lfilter
 from utils import *
 from config import *
 
+# 112 for test
 vctk_path = os.path.join(data_path, 'VCTK')
 voxceleb_path = os.path.join(data_path, 'voxceleb1')
 
 avg_frames = int((config.max_frames + config.min_frames) / 2.0)
 hop_frames = int(avg_frames / 2)
-utter_min_len = (config.max_frames * config.hop + config.window) * config.sr
+if config.mode != 'infer':
+    utter_min_len = (config.max_frames * config.hop + config.window) * config.sr
+else:
+    utter_min_len = (avg_frames * config.hop + config.window) * config.sr
 
 def preemphasis(x):
     """

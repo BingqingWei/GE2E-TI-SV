@@ -188,9 +188,9 @@ def gen_infer_batches():
     for file in os.listdir(infer_verif_path):
         verif_utters.extend(wav2spectro(os.path.join(infer_verif_path, file)))
 
-    if len(enroll_utters) == 0:
+    if len(enroll_utters) < 2:
         print_error_and_exit('Enrollment')
-    if len(verif_utters) == 0:
+    if len(verif_utters) < 1:
         print_error_and_exit('Verification')
 
     enroll_utters = np.transpose(np.array(enroll_utters), axes=(2, 0, 1))

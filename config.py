@@ -34,10 +34,10 @@ config_dict = {
     'nb_layers': 3,                                         # number of LSTM_Projection layers
     'loss':'softmax',
     'K_N': 10,                                              # K_N * N spearkers will be stored in buffer
-    'gpu_fraction': 0.6,                                    # gpu fraction
+    'gpu_fraction': 0.8,                                    # gpu fraction
 
     # Session
-    'mode': 'infer',                                         # train or test
+    'mode': 'infer',                                        # train or test
     'N': 16,                                                # number of speakers per batch
     'M': 7,                                                 # number of utterances per speaker
     'lr': 0.01,
@@ -59,7 +59,7 @@ config_dict = {
     'verbose': True,
     'debug': True,                                          # turn on debug info output
     'redirect_stdout': False,
-    'norm': False,                                          # if True, buffers will normalize the batches
+    'norm': False,                                           # if True, buffers will normalize the batches
     'redirect_fname': 'test-3000.txt'
 }
 
