@@ -22,30 +22,29 @@ class Model:
             verif_center = normalize(tf.reduce_mean(verif_embed, axis=0))
             self.s = tf.reduce_sum(enroll_center * verif_center, axis=0)
         else:
-            self.batch = tf.placeholder(shape=[None, config.N * config.M * 2 * len(config.dataset), config.mels], dtype=tf.float32)
-            embedded = self.build_model(self.batch)
-            offset_base = config.N * config.M * 2
-            embedd_01 = [embedded[i * offset_base + config.N * config.M: (i + 1) * offset_base, :]
-                         for i in range(len(config.dataset))]
-            embedd_02 = [embedded[i * offset_base :i * offset_base + config.N * config.M, :]
-                         for i in range(len(config.dataset))]
+            n_batch = 2 if config.mode == 'test' else config.n_batch
+            self.batch = tf.placeholder(shape=[None, config.N * config.M * n_batch, config.mels], dtype=tf.float32)
+            embedded = tf.reshape(self.build_model(self.batch), shape=[config.N * config.M, n_batch, -1])
+            embedds = [embedded[:, j, :] for j in range(config.n_batch)]
 
             if config.mode == 'train':
-                w = tf.get_variable('w', initializer=np.array([10], dtype=np.float32))
-                b = tf.get_variable('b', initializer=np.array([-5], dtype=np.float32))
-                center_01 = [embedd2center(embedd) for embedd in embedd_01]
-                center_02 = [embedd2center(embedd) for embedd in embedd_02]
-
-                if config.verbose: print('embedded size: ', embedd_01[0].shape)
-                s_mat_01 = [similarity(embedded=embedd, w=w, b=b, center=center)
-                            for embedd, center in zip(embedd_01, center_02)]
-                s_mat_02 = [similarity(embedded=embedd, w=w, b=b, center=center)
-                            for embedd, center in zip(embedd_02, center_01)]
-                if config.verbose: print('similarity matrix size: ', s_mat_01[0].shape)
-
-                self.loss = 0.0
-                for s_1, s_2, weight in zip(s_mat_01, s_mat_02, config.weights):
-                    self.loss += weight * (loss_cal(s_1, name=config.loss) + loss_cal(s_2, name=config.loss))
+                w = tf.get_variable('train_w', initializer=np.array([10], dtype=np.float32))
+                b = tf.get_variable('train_b', initializer=np.array([-5], dtype=np.float32))
+                centers = [embedd2center(e) for e in embedds]
+                if config.verbose: print('embedded size: ', embedds[0].shape)
+                if n_batch == 1:
+                    self.loss = loss_cal(similarity(embedds[0], w, b))
+                elif n_batch == 2:
+                    s_1 = similarity(embedded=embedds[0], w=w, b=b, center=centers[1])
+                    s_2 = similarity(embedded=embedds[1], w=w, b=b, center=centers[0])
+                    if config.verbose: print('similarity matrix size: ', s_1.shape)
+                    self.loss = loss_cal(s_1, name=config.loss) + loss_cal(s_2, name=config.loss)
+                else:
+                    s_1 = similarity(embedded=(embedds[0] + embedds[1]) / 2.0, w=w, b=b, center=centers[2])
+                    s_2 = similarity(embedded=(embedds[1] + embedds[2]) / 2.0, w=w, b=b, center=centers[0])
+                    s_3 = similarity(embedded=(embedds[0] + embedds[2]) / 2.0, w=w, b=b, center=centers[1])
+                    self.loss = loss_cal(s_1, name=config.loss) + loss_cal(s_2, name=config.loss) + \
+                                loss_cal(s_3, name=config.loss)
 
                 trainable_vars = tf.trainable_variables()
                 self.global_step = tf.Variable(0, name='global_step', trainable=False)
@@ -55,10 +54,12 @@ class Model:
                 grads, params = zip(*optimizer.compute_gradients(self.loss))
 
                 # 0.01 gradient scale for w and b, 0.5 gradient scale for projection nodes
-                grads_rescale = [0.01 * g for g in grads[:2]]
-                for g, p in zip(grads[2:], params[2:]):
+                grads_rescale = []
+                for g, p in zip(grads, params[2:]):
                     if 'projection' in p.name:
                         grads_rescale.append(0.5 * g)
+                    elif p.name == 'train_w' or p.name == 'train.b':
+                        grads_rescale.append(0.01 * g)
                     else:
                         grads_rescale.append(g)
 
@@ -71,7 +72,7 @@ class Model:
                 self.merged = tf.summary.merge_all()
 
             elif config.mode == 'test':
-                self.s_mat = center_similarity(embedd_01, embedd_02)
+                self.s_mat = center_similarity(embedds[0], embedds[1])
             else: raise ValueError()
         self.saver = tf.train.Saver()
 
@@ -86,20 +87,20 @@ class Model:
     def train(self, sess, path):
         assert config.mode == 'train'
         sess.run(tf.global_variables_initializer())
-        generator = BatchGenerator()
-        valid_generator = ValidBatchGenerator(nb_batches=config.nb_valid * 2)
+        generator = BatchGenerator(n_batch=config.n_batch)
+        valid_generator = ValidBatchGenerator(K_N=config.nb_valid)
 
         model_path = os.path.join(path, 'check_point')
         log_path = os.path.join(path, 'logs')
-        os.makedirs(model_path, exist_ok=True)
-        os.makedirs(log_path, exist_ok=True)
+        clear_and_make(model_path)
+        clear_and_make(log_path)
 
         writer = tf.summary.FileWriter(log_path, sess.graph)
         loss_acc = 0
         best_valid = np.inf
         for i in range(int(config.nb_iters)):
             _, loss_cur, summary = sess.run([self.train_op, self.loss, self.merged],
-                                            feed_dict={self.batch: generator.gen_batch2()})
+                                            feed_dict={self.batch: generator.gen_batch()})
             loss_acc += loss_cur
 
             if (i + 1) % config.log_per_iters == 0:
@@ -125,11 +126,10 @@ class Model:
     def valid(self, sess, generator):
         loss_acc = 0
         for i in range(config.nb_valid):
-            loss_cur = sess.run(self.loss, feed_dict={self.batch: generator.gen_batch2()})
+            loss_cur = sess.run(self.loss, feed_dict={self.batch: generator.gen_batch()})
             loss_acc += loss_cur
         print('validation loss: {}'.format(loss_acc / config.nb_valid))
         return loss_acc / config.nb_valid
-
 
     def test(self, sess, path, nb_batch_thres=100, nb_batch_test=3000):
         assert config.mode == 'test'
@@ -141,10 +141,10 @@ class Model:
 
         self.saver.restore(sess, path)
         config.train = True
-        generator = BatchGenerator()
+        generator = BatchGenerator(n_batch=2)
         s_mats = []
         for i in range(nb_batch_thres):
-            s = sess.run(self.s_mat, feed_dict={self.batch: generator.gen_batch2()})
+            s = sess.run(self.s_mat, feed_dict={self.batch: generator.gen_batch()})
             s_mats.append(s)
 
         diff, EER, THRES = math.inf, 0, 0
@@ -167,7 +167,7 @@ class Model:
         generator.reset()
         EERS = []
         for i in range(nb_batch_test):
-            s = sess.run(self.s_mat, feed_dict={self.batch: generator.gen_batch2()})
+            s = sess.run(self.s_mat, feed_dict={self.batch: generator.gen_batch()})
             far, frr = cal_ff(s, THRES)
             EERS.append((far + frr) / 2)
 
@@ -178,23 +178,8 @@ class Model:
     def restore(self, sess, path):
         self.saver.restore(sess, path)
 
-    def infer_no_restore(self, sess, thres):
+    def infer(self, sess, thres):
         assert config.mode == 'infer'
-        enrolls, verifs = gen_infer_batches()
-        s = sess.run(self.s, feed_dict={
-            self.enroll: enrolls,
-            self.verif: verifs
-        })
-        if s > thres:
-            print('same speaker')
-            return True
-        else:
-            print('different speakers')
-            return False
-
-    def infer(self, sess, path, thres=0.41):
-        assert config.mode == 'infer'
-        self.saver.restore(sess, path)
         enrolls, verifs = gen_infer_batches()
         s = sess.run(self.s, feed_dict={
             self.enroll: enrolls,

@@ -24,17 +24,18 @@ config_dict = {
     'mels':40,
 
     # Model
+    'n_batch': 3,                                           # number of batches
     'nb_hidden': 256,                                       # number of hidden units
     'nb_proj': 128,                                         # number of projection units
     'nb_layers': 3,                                         # number of LSTM_Projection layers
     'loss':'softmax',
-    'K_N': 15,                                              # K_N * N spearkers will be stored in buffer
+    'K_N': 2,                                              # K_N * N spearkers will be stored in buffer
     'gpu_fraction': 0.4,                                    # gpu fraction
 
     # Session
     'mode': 'train',                                        # train or test
     'N': 16,                                                # number of speakers per batch
-    'M': 7,                                                 # number of utterances per speaker
+    'M': 5,                                                 # number of utterances per speaker
     'lr': 0.001,
     'optim': ['adam',                                       # type of the optimizer
               {'beta1': 0.9, 'beta2': 0.999}],              # additional parameters
@@ -44,10 +45,7 @@ config_dict = {
     'decay_per_iters': 8000,                                # decay learning rate per X iterations
     'log_per_iters': 100,                                   # log info per X iterations
     'summary_per_iters':100,                                # write summary per X iterations
-    'dataset': ['voxceleb'],                                # datasets to be used. if mode is set to infer,
-                                                            # then all datasets are ignored
-                                                            # in test mode, only one dataset is allowed
-    'weights': [1.0],                                       # weights for each dataset
+    'dataset': 'voxceleb',
     'nb_valid': 1,                                          # number of batches to be used in validation
 
     # Debug
@@ -55,11 +53,15 @@ config_dict = {
     'debug': True,                                          # turn on debug info output
     'redirect_stdout': True,
     'norm': True,                                           # if True, buffers will normalize the batches
-    'redirect_fname': 'test-3000.txt'
+    'redirect_fname': 'test-3000.txt',
+
+    # Inference
+    'infer_thres': 0.71,
 }
 
+assert config_dict['n_batch'] in [1, 2, 3]
 assert config_dict['nb_valid'] == 1
-assert config_dict['M'] * 2 <= 22
+assert config_dict['M'] * config_dict['n_batch'] <= 22
 assert config_dict['mode'] in ['train', 'test', 'infer']
 assert len(config_dict['dataset']) != 0
 if config_dict['mode'] == 'test':

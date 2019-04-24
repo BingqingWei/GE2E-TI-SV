@@ -92,5 +92,5 @@ if __name__ == '__main__':
     model = GRU_Model()
     model.restore(sess, get_latest_ckpt(os.path.join(config.model_path, 'check_point')))
     print("\nInfer Session")
-    cross_test(lambda : model.infer_no_restore(sess, thres=0.61))
+    cross_test(lambda : model.infer(sess, thres=config.infer_thres))
 

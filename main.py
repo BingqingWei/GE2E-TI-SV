@@ -11,8 +11,8 @@ def main():
     if not os.path.exists(config.model_path):
         os.mkdir(os.path.join(config.model_path))
     if config.redirect_stdout:
-        sys.stdout = open(os.path.join(config.model_path, config.redirect_fname), 'w')
         print('stdout redirected')
+        sys.stdout = open(os.path.join(config.model_path, config.redirect_fname), 'w')
 
     tf_config = tf.ConfigProto()
     tf_config.gpu_options.per_process_gpu_memory_fraction = config.gpu_fraction
@@ -34,7 +34,8 @@ def main():
 
     else:
         print("\nInfer Session")
-        model.infer(sess, path=get_latest_ckpt(os.path.join(config.model_path, 'check_point')), thres=0.61)
+        model.restore(sess, path=get_latest_ckpt(os.path.join(config.model_path, 'check_point')))
+        model.infer(sess, thres=config.infer_thres)
 
 if __name__ == "__main__":
     main()

@@ -6,7 +6,13 @@ import matplotlib.pyplot as plt
 import random
 import os
 import glob
+import shutil
 from config import *
+
+def clear_and_make(fdir):
+    if os.path.exists(fdir):
+        shutil.rmtree(fdir)
+    os.mkdir(fdir)
 
 def get_latest_ckpt(fpath):
     files = glob.glob(os.path.join(fpath, 'model.ckpt-*.meta'))

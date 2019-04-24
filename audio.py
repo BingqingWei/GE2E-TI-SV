@@ -9,14 +9,9 @@ import time
 import pyaudio
 import wave
 import os
-from adv import infer_enroll_path, infer_verif_path
-from config import *
 from main import *
-
-def clear_and_make(fdir):
-    if os.path.exists(fdir):
-        shutil.rmtree(fdir)
-    os.mkdir(fdir)
+from config import *
+from utils import clear_and_make
 
 class Recorder(object):
     def __init__(self, channels=1, rate=44100, frames_per_buffer=1024):

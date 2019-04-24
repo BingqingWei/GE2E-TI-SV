@@ -4,7 +4,6 @@ from scipy.signal import lfilter
 from utils import *
 from config import *
 
-# 112 for test
 vctk_path = os.path.join(data_path, 'VCTK')
 voxceleb_path = os.path.join(data_path, 'voxceleb1')
 
@@ -206,7 +205,6 @@ def statistics_voxceleb_npy():
     Min number of utters per speaker: 22
     Mean number of utters per speaker: 194.532617671346
     '''
-
     print('Max number of utters per speaker: {}'.format(max(nb_utters)))
     print('Min number of utters per speaker: {}'.format(min(nb_utters)))
     print('Mean number of utters per speaker: {}'.format(np.mean(nb_utters)))

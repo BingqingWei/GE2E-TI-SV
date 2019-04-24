@@ -1,83 +1,41 @@
 __author__ = 'Bingqing Wei'
-import numpy as np
-import math
 import random
-import gc
-from config import *
 from data import wav2spectro
 from norm import *
+from config import *
+
+import math
 
 infer_enroll_path = os.path.join(config.infer_path, 'enroll')
 infer_verif_path = os.path.join(config.infer_path, 'verif')
 
 class BatchGenerator:
-    def __init__(self):
-        self.buffers = None
+    def __init__(self, n_batch):
+        self.buffer = None
         self.reset()
+        self.n_batch = n_batch
 
     def reset(self):
-        self.buffers = []
-        for dataset in config.dataset:
-            self.buffers.append(Buffer(dataset=dataset))
+        self.buffer = Buffer(dataset=config.dataset)
 
-    def gen_batch(self, sels, frames):
-        batches = []
-        r_sels = []
-        for buffer, sel, frame in zip(self.buffers, sels, frames):
-            new_batch, new_sel = self.random_batch(buffer, selected_files=sel, frames=frame)
-            batches.append(new_batch)
-            r_sels.append(new_sel)
-        return np.concatenate(batches, axis=1), r_sels
-
-    def gen_batch0(self):
-        batches = []
+    def gen_batch(self):
         if config.mode == 'train':
             frames = np.random.randint(config.min_frames, config.max_frames)
         else: frames = config.mid_frames
-        for buffer in self.buffers:
-            new_batch, new_sel = self.random_batch(buffer, selected_files=None, frames=frames)
-            batches.append(new_batch)
+        batches = self.buffer.sampleN(frames, N=self.n_batch)
+        # shape=(frames, N * M * n_batch, mels)
         return np.concatenate(batches, axis=1)
-
-    def gen_batch2(self):
-        batches = []
-        if config.mode == 'train':
-            frames = np.random.randint(config.min_frames, config.max_frames)
-        else: frames = config.mid_frames
-        for buffer in self.buffers:
-            batch1, batch2 = self.random_batch2(buffer, frames=frames)
-            batches.append(np.concatenate([batch1, batch2], axis=1))
-
-        # shape=(frames, N * M * 2 * len(datasets), mels)
-        return np.concatenate(batches, axis=1)
-
-    def random_batch(self, buffer, selected_files=None, frames=None):
-        return buffer.sample(sel_speakers=selected_files, frames=frames)
-
-    def random_batch2(self, buffer, frames=None):
-        return buffer.sample2(frames=frames)
 
 class ValidBatchGenerator(BatchGenerator):
-    def __init__(self, nb_batches=5):
-        self.nb_batches = nb_batches
-        super(ValidBatchGenerator, self).__init__()
+    def __init__(self, K_N=1):
+        self.reset_K_N = K_N
+        super(ValidBatchGenerator, self).__init__(n_batch=config.n_batch)
 
     def reset(self):
-        self.buffers = []
-        for dataset in config.dataset:
-            self.buffers.append(Buffer(dataset=dataset, K_N=self.nb_batches,
-                                       recycle=True, mode='test'))
+        self.buffer = Buffer(dataset=config.dataset, K_N=self.reset_K_N, recycle=True, mode='test')
 
 class Buffer:
-    def __init__(self, dataset='voxceleb',
-                 K_N=config.K_N, recycle=False, mode=config.mode):
-        """
-        :param dataset: vctk or voxceleb
-        :param K_N: K_N * N speakers to be sampled
-        :param K_M: K_M * M wav files per speaker to be loaded
-        :param recycle: if True, no flushing will be performed
-        """
-
+    def __init__(self, dataset='voxceleb', K_N=config.K_N, recycle=False, mode=config.mode):
         self.dataset = dataset
         self.counter = 0
         self.K_N = K_N * config.N
@@ -123,59 +81,20 @@ class Buffer:
             self.buffer.append(utters[utter_index])
         self.buffer = np.concatenate(self.buffer, axis=0)
 
-    def sample2(self, speaker_num=config.N, utter_num=config.M, frames=None):
+    def sampleN(self, frames, speaker_num=config.N, utter_num=config.M, N=2):
         sel_speakers = random.sample(range(self.K_N), speaker_num)
-        batch_1, batch_2 = [], []
+        batches = [[] for _ in range(N)]
         for i in sel_speakers:
             utters = self.buffer[i * self.K_M:(i + 1) * self.K_M, :]
-            utter_index = random.sample(range(utters.shape[0]), 2 * utter_num)
-            batch_1.append(utters[utter_index[:utter_num]])
-            batch_2.append(utters[utter_index[utter_num:]])
-        batch_1 = np.concatenate(batch_1, axis=0)
-        batch_2 = np.concatenate(batch_2, axis=0)
-        if frames is None:
-            if config.mode == 'train':
-                frames = np.random.randint(config.min_frames, config.max_frames)
-            else: frames = config.mid_frames
-        batch_1 = batch_1[:, :, :frames]
-        batch_2 = batch_2[:, :, :frames]
-
-        # shape = (frames, N * M, 40)
-        batch_1 = np.transpose(batch_1, axes=(2, 0, 1))
-        batch_2 = np.transpose(batch_2, axes=(2, 0, 1))
+            utter_index = random.sample(range(utters.shape[0]), N * utter_num)
+            for j in range(N):
+                batches[j].append(utters[utter_index[utter_num * j : utter_num * (j + 1)]])
+        batches = [np.concatenate(x) for x in batches]
+        batches = [normalize_batch(np.transpose(x[:, :, :frames], axes=(2, 0, 1)), self.dataset) for x in batches]
         self.counter += 2
         if self.counter >= self.count_down:
             self.flush()
-
-        return normalize_batch(batch_1, self.dataset), normalize_batch(batch_2, self.dataset)
-
-    def sample(self, speaker_num=config.N, utter_num=config.M,
-               sel_speakers=None, frames=None):
-        if sel_speakers is None:
-            sel_speakers = random.sample(range(self.K_N), speaker_num)
-
-        batch = []
-        for i in sel_speakers:
-            utters = self.buffer[i * self.K_M:(i + 1) * self.K_M, :]
-            utter_index = np.random.randint(0, utters.shape[0], utter_num)
-            batch.append(utters[utter_index])
-        batch = np.concatenate(batch, axis=0)
-        if config.mode == 'train':
-            if frames is None:
-                frames = np.random.randint(config.min_frames, config.max_frames)
-            batch = batch[:, :, :frames]
-        else:
-            if frames is None:
-                frames = int((config.min_frames + config.max_frames) / 2)
-            batch = batch[:, :, :frames]
-
-        # shape = (frames, N * M, 40)
-        batch = np.transpose(batch, axes=(2, 0, 1))
-        self.counter += 1
-        if self.counter >= self.count_down:
-            self.flush()
-
-        return normalize_batch(batch, self.dataset), sel_speakers
+        return batches
 
 def gen_infer_batches():
     """
@@ -209,6 +128,4 @@ def gen_infer_batches():
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     #buffer = Buffer(dataset='voxceleb')
-    gen = ValidBatchGenerator()
-    for i in range(100):
-        gen.gen_batch2()
+    pass

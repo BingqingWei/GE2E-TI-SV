@@ -109,10 +109,11 @@ def record_one(recorder, fdir, fname, min_second=4):
 
 
 if __name__ == '__main__':
+    import math
     recorder = Recorder()
     store_path = './audio'
     base = mk_or_not(store_path)
 
     print('Recording start')
-    for i in range(100000):
+    for i in range(int(math.inf)):
         record_one(recorder, store_path, 'record-{}.wav'.format(base + i), min_second=5)
