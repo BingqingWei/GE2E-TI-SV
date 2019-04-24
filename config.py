@@ -24,7 +24,7 @@ config_dict = {
     'mels':40,
 
     # Model
-    'n_batch': 3,                                           # number of batches
+    'n_batch': 2,                                           # number of batches
     'nb_hidden': 256,                                       # number of hidden units
     'nb_proj': 128,                                         # number of projection units
     'nb_layers': 3,                                         # number of LSTM_Projection layers
@@ -52,7 +52,7 @@ config_dict = {
     'verbose': True,
     'debug': True,                                          # turn on debug info output
     'redirect_stdout': True,
-    'norm': True,                                           # if True, buffers will normalize the batches
+    'norm': False,                                          # if True, buffers will normalize the batches
     'redirect_fname': 'test-3000.txt',
 
     # Inference
@@ -63,13 +63,7 @@ assert config_dict['n_batch'] in [1, 2, 3]
 assert config_dict['nb_valid'] == 1
 assert config_dict['M'] * config_dict['n_batch'] <= 22
 assert config_dict['mode'] in ['train', 'test', 'infer']
-assert len(config_dict['dataset']) != 0
-if config_dict['mode'] == 'test':
-    assert len(config_dict['dataset']) == 1
-
-for dataset in config_dict['dataset']:
-    assert dataset in ['voxceleb', 'vctk']
-assert len(config_dict['weights']) == len(config_dict['dataset'])
+assert config_dict['dataset'] in ['voxceleb', 'vctk']
 
 config_dict['mid_frames'] = int((config_dict['max_frames'] + config_dict['min_frames']) / 2)
 
