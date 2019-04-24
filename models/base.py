@@ -37,7 +37,6 @@ class Model:
                 center_02 = [embedd2center(embedd) for embedd in embedd_02]
 
                 if config.verbose: print('embedded size: ', embedd_01[0].shape)
-
                 s_mat_01 = [similarity(embedded=embedd, w=w, b=b, center=center)
                             for embedd, center in zip(embedd_01, center_02)]
                 s_mat_02 = [similarity(embedded=embedd, w=w, b=b, center=center)
@@ -126,7 +125,7 @@ class Model:
     def valid(self, sess, generator):
         loss_acc = 0
         for i in range(config.nb_valid):
-            _, loss_cur = sess.run([self.train_op, self.loss], feed_dict={self.batch: generator.gen_batch2()})
+            loss_cur = sess.run(self.loss, feed_dict={self.batch: generator.gen_batch2()})
             loss_acc += loss_cur
         print('validation loss: {}'.format(loss_acc / config.nb_valid))
         return loss_acc / config.nb_valid

@@ -1,6 +1,5 @@
 __author__ = 'Bingqing Wei'
 import keras
-
 from models.base import *
 
 class OLD_LSTM_Model(Model):
@@ -52,10 +51,14 @@ class GRU_Model(Model):
 # provided by lawy623
 class GRU_Dropout_Model(Model):
     def build_model(self, batch):
-        print("-----GRU with Dropout Model-----")
         with tf.variable_scope('gru-dropout'):
-            cells = [tf.contrib.rnn.DropoutWrapper(tf.nn.rnn_cell.GRUCell(num_units=config.nb_hidden, kernel_initializer=tf.initializers.orthogonal, bias_initializer=tf.initializers.orthogonal),output_keep_prob=0.5) for _ in range(config.nb_layers-1)]
-            cells.append(tf.contrib.rnn.DropoutWrapper(tf.nn.rnn_cell.GRUCell(num_units=config.nb_proj, kernel_initializer=tf.initializers.orthogonal, bias_initializer=tf.initializers.orthogonal),output_keep_prob=0.5))
+            cells = [tf.contrib.rnn.DropoutWrapper(
+                tf.nn.rnn_cell.GRUCell(num_units=config.nb_hidden, kernel_initializer=tf.initializers.orthogonal,
+                                       bias_initializer=tf.initializers.orthogonal), output_keep_prob=0.5)
+                for _ in range(config.nb_layers-1)]
+            cells.append(tf.contrib.rnn.DropoutWrapper(
+                tf.nn.rnn_cell.GRUCell(num_units=config.nb_proj, kernel_initializer=tf.initializers.orthogonal,
+                                       bias_initializer=tf.initializers.orthogonal), output_keep_prob=0.5))
             gru = tf.nn.rnn_cell.MultiRNNCell(cells)
             outputs, _ = tf.nn.dynamic_rnn(cell=gru, inputs=batch, dtype=tf.float32, time_major=True)
             embedded = outputs[-1]
@@ -66,7 +69,6 @@ class GRU_Dropout_Model(Model):
 class LSTM_ATT_Model(Model):
     def build_model(self, batch):
         att_size = 128
-        print("-----LSTM Model with Attention-----")
         with tf.variable_scope('lstm-att'):
             cells = [tf.contrib.rnn.LSTMCell(num_units=config.nb_hidden, num_proj=config.nb_proj)
                      for i in range(config.nb_layers)]
@@ -90,7 +92,6 @@ class LSTM_ATT_Model(Model):
 
 class BI_LSTM_Model(Model):
     def build_model(self, batch):
-        print("-----Bi-LSTM Model-----")
         with tf.variable_scope('bi-lstm'):
             cells_fw = [tf.contrib.rnn.LSTMCell(num_units=config.nb_hidden, num_proj=config.nb_proj) for _ in range(config.nb_layers)]
             lstm_fw = tf.contrib.rnn.MultiRNNCell(cells_fw)

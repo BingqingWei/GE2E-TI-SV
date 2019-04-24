@@ -6,11 +6,6 @@ work_dir = r'.\data-16000'
 
 class Config: pass
 
-"""
-during execution:
-modifying anything other than the config.mode is not recommended
-"""
-
 config_dict = {
     # Data
     'train_path': os.path.join(work_dir, 'train_tisv'),     # train dataset directory
@@ -29,13 +24,12 @@ config_dict = {
     'mels':40,
 
     # Model
-    'tb': True,
     'nb_hidden': 256,                                       # number of hidden units
     'nb_proj': 128,                                         # number of projection units
     'nb_layers': 3,                                         # number of LSTM_Projection layers
     'loss':'softmax',
-    'K_N': 10,                                              # K_N * N spearkers will be stored in buffer
-    'gpu_fraction': 0.6,                                    # gpu fraction
+    'K_N': 15,                                              # K_N * N spearkers will be stored in buffer
+    'gpu_fraction': 0.4,                                    # gpu fraction
 
     # Session
     'mode': 'train',                                        # train or test
@@ -54,16 +48,17 @@ config_dict = {
                                                             # then all datasets are ignored
                                                             # in test mode, only one dataset is allowed
     'weights': [1.0],                                       # weights for each dataset
-    'nb_valid': 50,                                         # number of batches to be used in validation
+    'nb_valid': 1,                                          # number of batches to be used in validation
 
     # Debug
     'verbose': True,
     'debug': True,                                          # turn on debug info output
-    'redirect_stdout': False,
-    'norm': False,                                          # if True, buffers will normalize the batches
+    'redirect_stdout': True,
+    'norm': True,                                           # if True, buffers will normalize the batches
     'redirect_fname': 'test-3000.txt'
 }
 
+assert config_dict['nb_valid'] == 1
 assert config_dict['M'] * 2 <= 22
 assert config_dict['mode'] in ['train', 'test', 'infer']
 assert len(config_dict['dataset']) != 0
