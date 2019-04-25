@@ -24,7 +24,7 @@ config_dict = {
     'mels':40,
 
     # Model
-    'n_batch': 2,                                           # number of batches
+    'n_batch': 1,                                           # number of batches
     'nb_hidden': 256,                                       # number of hidden units
     'nb_proj': 128,                                         # number of projection units
     'nb_layers': 3,                                         # number of LSTM_Projection layers
@@ -35,13 +35,13 @@ config_dict = {
     # Session
     'mode': 'train',                                        # train or test
     'N': 16,                                                # number of speakers per batch
-    'M': 5,                                                 # number of utterances per speaker
+    'M': 10,                                                 # number of utterances per speaker
     'lr': 0.001,
     'optim': ['adam',                                       # type of the optimizer
               {'beta1': 0.9, 'beta2': 0.999}],              # additional parameters
     'decay': 'cosine',
     'nb_iters': 1e5,                                        # max iterations
-    'save_per_iters': 3000,                                 # save models per X iterations
+    'save_per_iters': 400,                                 # save models per X iterations
     'decay_per_iters': 8000,                                # decay learning rate per X iterations
     'log_per_iters': 100,                                   # log info per X iterations
     'summary_per_iters':100,                                # write summary per X iterations

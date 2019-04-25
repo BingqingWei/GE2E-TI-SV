@@ -24,16 +24,16 @@ class Model:
         else:
             n_batch = 2 if config.mode == 'test' else config.n_batch
             self.batch = tf.placeholder(shape=[None, config.N * config.M * n_batch, config.mels], dtype=tf.float32)
-            embedded = tf.reshape(self.build_model(self.batch), shape=[config.N * config.M, n_batch, -1])
+            embedded = tf.reshape(self.build_model(self.batch), shape=[config.N, config.M * n_batch, -1])
 
             if config.mode == 'train':
                 w = tf.get_variable('train_w', initializer=np.array([10], dtype=np.float32))
                 b = tf.get_variable('train_b', initializer=np.array([-5], dtype=np.float32))
                 if config.verbose: print('embedded size: ', embedded.shape)
                 if n_batch == 1:
-                    self.loss = loss_cal(similarity(tf.squeeze(embedded, 1), w, b))
+                    self.loss = loss_cal(similarity(tf.reshape(embedded, [config.N * config.M, -1]), w, b))
                 else:
-                    embedds = [embedded[:, j, :] for j in range(config.n_batch)]
+                    embedds = [embedded[:, j * config.M : (j + 1) * config.M, :] for j in range(config.n_batch)]
                     centers = [embedd2center(e) for e in embedds]
                     if n_batch == 2:
                         s_1 = similarity(embedded=embedds[0], w=w, b=b, center=centers[1])

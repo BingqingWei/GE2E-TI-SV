@@ -82,7 +82,6 @@ def copy_to_infer(enrolls, verifs):
     for v in verifs:
         shutil.copy(v, infer_verif_path)
 
-
 if __name__ == '__main__':
     assert config.mode == 'infer'
     tf_config = tf.ConfigProto()
