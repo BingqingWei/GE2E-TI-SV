@@ -33,7 +33,7 @@ class Model:
                 if n_batch == 1:
                     self.loss = loss_cal(similarity(tf.reshape(embedded, [config.N * config.M, -1]), w, b))
                 else:
-                    embedds = [embedded[j*config.N: (j + 1)*config.N, :, :] for j in range(config.n_batch)]
+                    embedds = [tf.reshape(embedded[j*config.N: (j + 1)*config.N, :, :], [config.N * config.M, -1]) for j in range(config.n_batch)]
                     centers = [embedd2center(e) for e in embedds]
                     if n_batch == 2:
                         s_1 = similarity(embedded=embedds[0], w=w, b=b, center=centers[1])
@@ -73,6 +73,7 @@ class Model:
                 self.merged = tf.summary.merge_all()
 
             elif config.mode == 'test':
+                embedds = [tf.reshape(embedded[j*config.N: (j + 1)*config.N, :, :], [config.N * config.M, -1]) for j in range(config.n_batch)]
                 self.s_mat = center_similarity(embedds[0], embedds[1])
             else: raise ValueError()
         self.saver = tf.train.Saver()
@@ -115,9 +116,6 @@ class Model:
 
             if (i + 1) % config.save_per_iters == 0:
                 valid_loss = self.valid(sess, valid_generator)
-                if valid_loss > best_valid:
-                    print('validation loss is too large, skipping')
-                    continue
                 best_valid = min(best_valid, valid_loss)
                 self.saver.save(sess, os.path.join(path, 'check_point', 'model.ckpt'),
                                 global_step=i // config.save_per_iters)

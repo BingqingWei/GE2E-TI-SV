@@ -56,7 +56,7 @@ class Buffer:
                 print('buffer countdown: ', self.count_down)
 
     def calcCountDown(self):
-        return int(config.K_N ** 2 * self.K_M / config.M)
+        return int(config.K_N ** 2 * self.K_M / (config.M * config.n_batch) * 4)
 
     def update(self, npy_list):
         """

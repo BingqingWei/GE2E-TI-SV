@@ -84,11 +84,15 @@ def copy_to_infer(enrolls, verifs):
 
 if __name__ == '__main__':
     assert config.mode == 'infer'
+    if config.redirect_stdout:
+        print('stdout redirected')
+        sys.stdout = open(os.path.join(config.model_path, config.redirect_fname), 'w')
+
     tf_config = tf.ConfigProto()
     tf_config.gpu_options.per_process_gpu_memory_fraction = config.gpu_fraction
     tf.reset_default_graph()
     sess = tf.Session(config=tf_config)
-    model = GRU_Model()
+    model = LSTM_Model()
     model.restore(sess, get_latest_ckpt(os.path.join(config.model_path, 'check_point')))
     print("\nInfer Session")
     cross_test(lambda : model.infer(sess, thres=config.infer_thres))
